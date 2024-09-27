@@ -1,6 +1,4 @@
-import { Image, StyleSheet, Platform } from 'react-native';
-
-import { HelloWave } from '@/components/HelloWave';
+import { Image, StyleSheet, Platform, View, Text, Button } from 'react-native';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -16,7 +14,16 @@ export default function HomeScreen() {
         />
       }>
       <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title" style={styles.titleText}>Welcome, no-pain-no-main.</ThemedText>
+        <ThemedText type="title" style={styles.titleText}>Welcome to no pain no main</ThemedText>
+      </ThemedView>
+      
+      <ThemedView style={styles.timerContainer}>
+        <Text style={styles.timerText}>00:05:00</Text>
+      </ThemedView>
+
+      <ThemedView style={styles.gameContainer}>
+        <Button title="Start Quiz" onPress={() => { /* Start Quiz Functionality */ }} />
+        <Button title="Play Game" onPress={() => { /* Start Game Functionality */ }} />
       </ThemedView>
     </ParallaxScrollView>
   );
@@ -27,20 +34,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 8,
+    marginVertical: 20,
   },
   titleText: {
     textAlign: 'center',
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+    fontSize: 24,
+    fontWeight: 'bold',
   },
   reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+    height: 150,
+    width: 150,
+    marginTop: 50,
+  },
+  timerContainer: {
+    marginTop: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  timerText: {
+    fontSize: 48,
+    fontWeight: 'bold',
+  },
+  gameContainer: {
+    marginTop: 60,
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    flexDirection: 'row',
+    gap: 20,
   },
 });
