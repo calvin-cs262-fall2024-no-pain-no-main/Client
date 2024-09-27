@@ -1,50 +1,15 @@
-# Welcome to your Expo app 👋
+# Project
+Vision statement:
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+For many people, a healthy lifestyle includes going to the gym. Others still recognize that the gym is useful for being healthy, but are intimidated if they are unfamilar with it. In the hectic lives that many of us face, an efficent gym workout can be the difference between whether someone decides to go to the gym or not. Proper rest time can also make a big difference towards making progress at the gym. Our goal with this app is to provide a structure to workouts that lets users get optimal rest time in between sets, while also offering ideas on excercies and mirco-learning to aid users in their fitness journey. Users will also have the ablity to track their workouts and see the progress they have made. This app is geared for anyone who uses the gym, from first-timers to veterans and anwyhere in between. By seamlessly blending structured workout plans with interactive, entertaining, and educational recovery moments, our app transforms traditional exercise routines into an enjoyable adventure.
 
-## Get started
+ Unlike standard fitness apps that treat rest as just another timer, our app keeps users engaged and motivated during downtime with games, micro-learning, and expert tips, making every second of the workout a productive and enjoyable experience. And if the user desires, rest time can be used to mentally recover from the day, but keep them on track so they do not get distracted. It is very easy to turn a 30 second rest into two minutes by zoning out, and we aim to mitigate this. Other fitness apps may offer workout ideas, or a timer, but very few tend to integrate these together. Time is preciious, and we want users to maximize their time in the gym.
 
-1. Install dependencies
+ Our team is comprised of the following members:
 
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-    npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+    - David Kim
+    - Tim David
+    - Brady Swiech
+    - Kaleb Rietman
+    - Zach Redder
+    - Ben Kosters
