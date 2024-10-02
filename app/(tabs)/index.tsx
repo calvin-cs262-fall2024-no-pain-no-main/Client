@@ -8,7 +8,7 @@ export default function HomeScreen() {
   const [showRestInfo, setShowRestInfo] = useState(false); // Controls the visibility of rest information
   const timerPosition = new Animated.Value(0); // Controls the timer position for animation
 
-  // Function to format the timer in MM:SS format
+
   const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
