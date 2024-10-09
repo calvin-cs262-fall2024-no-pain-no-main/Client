@@ -8,7 +8,7 @@ export default function MainScreen() {
 
     async function startApp() {
         // setLoading(true);
-        router.push("/(tabs)/home");  // move to tabs
+        router.push("/(tabs)/timer");  // move to tabs
     }
 
     return (
