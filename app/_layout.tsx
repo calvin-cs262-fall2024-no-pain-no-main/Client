@@ -28,11 +28,11 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack>
-            <Stack.Screen name="index" options={{ title: 'Home' }} />
-            <Stack.Screen name="(tabs)" options={{ title: 'Home' }} />
-            <Stack.Screen name="(about)/aboutpage" options={{ title: 'About' }} />
-        </Stack>
+      <Stack>
+        <Stack.Screen name="index" options={{ title: 'Home', headerShown: false, }} />
+        <Stack.Screen name="(tabs)" options={{ title: 'Tabs', headerShown: false, }} />
+        <Stack.Screen name="(about)/aboutpage" options={{ title: 'About' }} />
+      </Stack>
     </ThemeProvider>
   );
 }
