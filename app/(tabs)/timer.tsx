@@ -104,6 +104,7 @@ export default function HomeScreen() {
           <View style={styles.timerContainer}>
             <TouchableOpacity onPress={() => setIsEditing(true)}>
               <Text style={styles.timerText}>{formatTime(remainingTime)}</Text>
+              <Text style={styles.editText}>tap to edit</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -141,6 +142,12 @@ const styles = StyleSheet.create({
   timerText: {
     fontSize: 48,
     textAlign: 'center',
+  },
+  editText: {
+    fontSize: 14,
+    color: '#888',
+    textAlign: 'center',
+    marginTop: 5,
   },
   timePickerContainer: {
     flexDirection: 'row',
