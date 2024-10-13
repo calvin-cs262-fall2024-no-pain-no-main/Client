@@ -1,162 +1,180 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Animated, ScrollView } from 'react-native';
-import { ThemedView } from '@/components/ThemedView';
+import { StyleSheet, View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { CountdownCircleTimer } from 'react-native-countdown-circle-timer';
+import { Picker } from '@react-native-picker/picker';
 
 export default function HomeScreen() {
-  const [timer, setTimer] = useState(0); // Timer starts at 0
   const [isRunning, setIsRunning] = useState(false); // Timer state (running or not)
-  const [showRestInfo, setShowRestInfo] = useState(false); // Controls the visibility of rest information
-  const [selectedRestTime, setSelectedRestTime] = useState(null); // Store selected rest time
-  const [showIntensityButtons, setShowIntensityButtons] = useState(true); // Controls visibility of intensity buttons
-  const [scale, setScale] = useState(new Animated.Value(1)); // Scale for zooming effect
+  const [remainingTime, setRemainingTime] = useState(60); // Default rest time
+  const [initialTime, setInitialTime] = useState(60); // Initial time for reset
+  const [isEditing, setIsEditing] = useState(false); // Editing state
+  const [minutes, setMinutes] = useState(1); // Minutes for picker
+  const [seconds, setSeconds] = useState(0); // Seconds for picker
 
-  const formatTime = (seconds) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-  };
-
-  // useEffect to handle the timer countdown
   useEffect(() => {
     let interval;
-    if (isRunning && timer > 0) {
+    if (isRunning && remainingTime > 0) {
       interval = setInterval(() => {
-        setTimer((prevTimer) => prevTimer - 1);
+        setRemainingTime((prevTime) => prevTime - 1);
       }, 1000);
-    } else if (!isRunning && timer !== 0) {
+    } else if (remainingTime === 0) {
+      setIsRunning(false);
+    } else if (!isRunning && remainingTime !== 0) {
       clearInterval(interval);
     }
     return () => clearInterval(interval);
-  }, [isRunning, timer]);
+  }, [isRunning, remainingTime]);
 
   // Function to start/stop the timer
   const handleStartStop = () => {
-    if (timer > 0) { // Only start if timer is set
-      setIsRunning((prev) => !prev);
-      setShowRestInfo((prev) => !prev);
-      setShowIntensityButtons(!isRunning); // Hide buttons when running
-
-      // Animate the timer scaling
-      Animated.timing(scale, {
-        toValue: isRunning ? 1 : 1.5, // Zoom in when starting, zoom out when stopping
-        duration: 500,
-        useNativeDriver: true,
-      }).start();
-    }
+    setIsRunning((prev) => !prev);
   };
 
   // Function to reset the timer
   const handleReset = () => {
-    setTimer(0);
     setIsRunning(false);
-    setShowRestInfo(false); // Hide rest info on reset
-    setSelectedRestTime(null); // Reset selected rest time
-    setShowIntensityButtons(true); // Show intensity buttons on reset
-    setScale(new Animated.Value(1)); // Reset scale to original size
+    setRemainingTime(initialTime);
   };
 
-  // Function to set rest time based on selected intensity
-  const handleIntensitySelect = (intensity) => {
-    let restTime;
-    switch (intensity) {
-      case 'normal':
-        restTime = 90; // 1:30 min
-        break;
-      case 'intermediate':
-        restTime = 120; // 2 min
-        break;
-      case 'intense':
-        restTime = 180; // 3 min
-        break;
-      default:
-        restTime = null;
-    }
-    setSelectedRestTime(restTime);
-    setTimer(restTime); // Set the timer to the selected rest time
+  // Function to handle time input change
+  const handleTimeChange = () => {
+    let newTime = parseInt(minutes * 60) + parseInt(seconds);
+    setRemainingTime(newTime);
+    setInitialTime(newTime);
+    setIsEditing(false);
   };
+
+  if (isEditing) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.timePickerContainer}>
+          <View style={styles.pickerColumn}>
+            <Text style={styles.pickerTitle}>Minutes</Text>
+            <Picker
+              selectedValue={minutes}
+              style={styles.picker}
+              onValueChange={(itemValue) => setMinutes(itemValue)}
+            >
+              {[...Array(10).keys()].map((i) => (
+                <Picker.Item key={`min-${i}`} label={`${i.toString().padStart(2, '0')}`} value={i} />
+              ))}
+            </Picker>
+          </View>
+          <Text style={styles.colon}>:</Text>
+          <View style={styles.pickerColumn}>
+            <Text style={styles.pickerTitle}>Seconds</Text>
+            <Picker
+              selectedValue={seconds}
+              style={styles.picker}
+              onValueChange={(itemValue) => setSeconds(itemValue)}
+            >
+              {[...Array(60).keys()].map((i) => (
+                <Picker.Item key={`sec-${i}`} label={`${i.toString().padStart(2, '0')}`} value={i} />
+              ))}
+            </Picker>
+          </View>
+        </View>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity onPress={handleTimeChange} style={styles.button}>
+            <Text style={styles.buttonText}>Set Time</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setIsEditing(false)} style={styles.button}>
+            <Text style={styles.buttonText}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      {/* Animated Timer */}
-      <Animated.View style={[styles.circle, { transform: [{ scale }] }]}>
-        <TouchableOpacity onPress={handleStartStop}>
-          <Text style={styles.timerText}>{formatTime(timer)}</Text>
+      <CountdownCircleTimer
+        key={remainingTime} // Add key to force re-render
+        isPlaying={isRunning}
+        duration={initialTime}
+        initialRemainingTime={remainingTime}
+        colors={['#3498db', '#4dd100', '#F7B801', '#A30000']}
+        colorsTime={[initialTime, initialTime * 0.75, initialTime * 0.33, 0]}
+        strokeLinecap="round"
+        onComplete={() => {
+          setIsRunning(false);
+        }}
+      >
+        {({ remainingTime }) => (
+          <View style={styles.timerContainer}>
+            <TouchableOpacity onPress={() => setIsEditing(true)}>
+              <Text style={styles.timerText}>{formatTime(remainingTime)}</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </CountdownCircleTimer>
+
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity onPress={handleStartStop} style={styles.resetButton}>
+          <Text style={styles.buttonText}>{isRunning ? 'Stop' : 'Start'}</Text>
         </TouchableOpacity>
-      </Animated.View>
-
-      {/* Rest Info Box (Appears when timer starts) */}
-      {showRestInfo && (
-        <View style={styles.restInfoContainer}>
-          <Text style={styles.restInfoText}>
-            Remember, resting between sets helps muscles recover and grow stronger. Aim for 60-90
-            seconds of rest for most exercises!
-          </Text>
-          <Text style={styles.restInfoText}>
-            During rest, deep breathing and hydration can help you optimize your workout performance.
-          </Text>
-          {selectedRestTime && (
-            <Text style={styles.restInfoText}>
-              Selected Rest Time: {Math.floor(selectedRestTime / 60)}:{(selectedRestTime % 60).toString().padStart(2, '0')}
-            </Text>
-          )}
-        </View>
-      )}
-
-      {/* Intensity Buttons */}
-      {showIntensityButtons && (
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.intensityButton} onPress={() => handleIntensitySelect('normal')}>
-            <Text style={styles.buttonText}>Normal (1:30 min)</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.intensityButton} onPress={() => handleIntensitySelect('intermediate')}>
-            <Text style={styles.buttonText}>Intermediate (2:00 min)</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.intensityButton} onPress={() => handleIntensitySelect('intense')}>
-            <Text style={styles.buttonText}>Intense (3:00 min)</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* Stylish Reset Button */}
-      <TouchableOpacity style={styles.resetButton} onPress={handleReset} disabled={isRunning}>
-        <Text style={styles.resetButtonText}>Reset Timer</Text>
-      </TouchableOpacity>
+        <TouchableOpacity onPress={handleReset} style={styles.resetButton}>
+          <Text style={styles.resetButtonText}>Reset</Text>
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 }
 
+const formatTime = (seconds) => {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+};
+
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20, // Optional padding to prevent elements from touching edges
   },
-  circle: {
-    width: 250,
-    height: 250,
-    borderRadius: 125,
-    borderWidth: 10,
-    borderColor: '#A1CEDC',
-    alignItems: 'center',
+  timerContainer: {
     justifyContent: 'center',
-    marginBottom: 40,
+    alignItems: 'center',
+    position: 'absolute',
   },
   timerText: {
-    fontSize: 64,
-    fontWeight: 'bold',
+    fontSize: 48,
     textAlign: 'center',
   },
-  restInfoContainer: {
-    padding: 20,
+  timePickerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
     marginTop: 20,
   },
-  restInfoText: {
+  pickerColumn: {
+    alignItems: 'center',
+  },
+  pickerTitle: {
     fontSize: 18,
-    textAlign: 'center',
     marginBottom: 10,
-    color: '#333',
+  },
+  picker: {
+    width: 100,
+    height: 50,
+  },
+  colon: {
+    fontSize: 48,
+    marginHorizontal: 10,
+    marginTop: 190,
+  },
+  button: {
+    marginTop: 50,
+    backgroundColor: '#3498db',
+    paddingVertical: 15,
+    paddingHorizontal: 40,
+    borderRadius: 30,
+  },
+  buttonText: {
+    fontSize: 20,
+    color: '#fff',
+    fontWeight: 'bold',
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -171,12 +189,6 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     marginHorizontal: 5,
     width: '30%', // Adjust width as necessary
-  },
-  buttonText: {
-    fontSize: 16,
-    color: '#fff',
-    fontWeight: 'bold',
-    textAlign: 'center',
   },
   resetButton: {
     backgroundColor: '#3498db',
