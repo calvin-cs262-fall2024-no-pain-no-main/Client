@@ -55,7 +55,7 @@ export default function HomeScreen() {
               style={styles.picker}
               onValueChange={(itemValue) => setMinutes(itemValue)}
             >
-              {[...Array(10).keys()].map((i) => (
+              {[...Array(6).keys()].map((i) => (
                 <Picker.Item key={`min-${i}`} label={`${i.toString().padStart(2, '0')}`} value={i} />
               ))}
             </Picker>
@@ -68,7 +68,7 @@ export default function HomeScreen() {
               style={styles.picker}
               onValueChange={(itemValue) => setSeconds(itemValue)}
             >
-              {[...Array(60).keys()].map((i) => (
+              {[0, 15, 30, 45].map((i) => (
                 <Picker.Item key={`sec-${i}`} label={`${i.toString().padStart(2, '0')}`} value={i} />
               ))}
             </Picker>
