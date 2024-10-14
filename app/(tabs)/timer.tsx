@@ -12,7 +12,7 @@ export default function HomeScreen() {
   const [seconds, setSeconds] = useState(30); // Seconds for picker
 
   useEffect(() => {
-    let interval;
+    let interval :any;
     if (isRunning && remainingTime > 0) {
       interval = setInterval(() => {
         setRemainingTime((prevTime) => prevTime - 1);
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
   colon: {
     fontSize: 48,
     marginHorizontal: 10,
-    marginTop: 190,
+    marginTop: 20, // Adjust the vertical position of the colon
   },
   button: {
     marginTop: 50,
