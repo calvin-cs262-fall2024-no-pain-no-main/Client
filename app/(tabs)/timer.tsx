@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { CountdownCircleTimer } from 'react-native-countdown-circle-timer';
 import { Picker } from '@react-native-picker/picker';
@@ -10,19 +10,19 @@ export default function HomeScreen() {
   const [isEditing, setIsEditing] = useState(false); // Editing state
   const [minutes, setMinutes] = useState(2); // Minutes for picker
   const [seconds, setSeconds] = useState(30); // Seconds for picker
+  const intervalRef = useRef(null); // Ref for the interval
 
   useEffect(() => {
-    let interval;
     if (isRunning && remainingTime > 0) {
-      interval = setInterval(() => {
+      intervalRef.current = setInterval(() => {
         setRemainingTime((prevTime) => prevTime - 1);
       }, 1000);
     } else if (remainingTime === 0) {
       handleReset();
     } else if (!isRunning && remainingTime !== 0) {
-      clearInterval(interval);
+      clearInterval(intervalRef.current);
     }
-    return () => clearInterval(interval);
+    return () => clearInterval(intervalRef.current);
   }, [isRunning, remainingTime]);
 
   // Function to start the timer
@@ -32,6 +32,7 @@ export default function HomeScreen() {
 
   // Function to reset the timer
   const handleReset = () => {
+    clearInterval(intervalRef.current);
     setIsRunning(false);
     setRemainingTime(initialTime);
   };
@@ -43,6 +44,13 @@ export default function HomeScreen() {
     setInitialTime(newTime);
     setIsEditing(false);
     setIsRunning(true); // Auto-start the timer
+  };
+
+  // Function to handle editing state
+  const handleEdit = () => {
+    setMinutes(Math.floor(remainingTime / 60));
+    setSeconds(remainingTime % 60);
+    setIsEditing(true);
   };
 
   if (isEditing) {
@@ -98,13 +106,13 @@ export default function HomeScreen() {
         colorsTime={[initialTime, initialTime * 0.75, initialTime * 0.33, 0]}
         strokeLinecap="round"
         onComplete={() => {
-          setRemainingTime(initialTime); // Reset the timer
+          handleReset(); // Reset the timer
           return { shouldRepeat: false }; // Pause the timer
         }}
       >
         {({ remainingTime }) => (
           <View style={styles.timerContainer}>
-            <TouchableOpacity onPress={() => setIsEditing(true)}>
+            <TouchableOpacity onPress={handleEdit}>
               <Text style={styles.timerText}>{formatTime(remainingTime)}</Text>
               <Text style={styles.editText}>tap to edit</Text>
             </TouchableOpacity>
