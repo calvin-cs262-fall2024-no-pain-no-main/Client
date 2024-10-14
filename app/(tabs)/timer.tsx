@@ -5,11 +5,11 @@ import { Picker } from '@react-native-picker/picker';
 
 export default function HomeScreen() {
   const [isRunning, setIsRunning] = useState(false); // Timer state (running or not)
-  const [remainingTime, setRemainingTime] = useState(60); // Default rest time
-  const [initialTime, setInitialTime] = useState(60); // Initial time for reset
+  const [remainingTime, setRemainingTime] = useState(150); // Default rest time (2:30)
+  const [initialTime, setInitialTime] = useState(150); // Initial time for reset (2:30)
   const [isEditing, setIsEditing] = useState(false); // Editing state
-  const [minutes, setMinutes] = useState(1); // Minutes for picker
-  const [seconds, setSeconds] = useState(0); // Seconds for picker
+  const [minutes, setMinutes] = useState(2); // Minutes for picker
+  const [seconds, setSeconds] = useState(30); // Seconds for picker
 
   useEffect(() => {
     let interval;
@@ -18,16 +18,16 @@ export default function HomeScreen() {
         setRemainingTime((prevTime) => prevTime - 1);
       }, 1000);
     } else if (remainingTime === 0) {
-      setIsRunning(false);
+      handleReset();
     } else if (!isRunning && remainingTime !== 0) {
       clearInterval(interval);
     }
     return () => clearInterval(interval);
   }, [isRunning, remainingTime]);
 
-  // Function to start/stop the timer
-  const handleStartStop = () => {
-    setIsRunning((prev) => !prev);
+  // Function to start the timer
+  const handleStart = () => {
+    setIsRunning(true);
   };
 
   // Function to reset the timer
@@ -42,6 +42,7 @@ export default function HomeScreen() {
     setRemainingTime(newTime);
     setInitialTime(newTime);
     setIsEditing(false);
+    setIsRunning(true); // Auto-start the timer
   };
 
   if (isEditing) {
@@ -97,7 +98,8 @@ export default function HomeScreen() {
         colorsTime={[initialTime, initialTime * 0.75, initialTime * 0.33, 0]}
         strokeLinecap="round"
         onComplete={() => {
-          setIsRunning(false);
+          setRemainingTime(initialTime); // Reset the timer
+          return { shouldRepeat: false }; // Pause the timer
         }}
       >
         {({ remainingTime }) => (
@@ -111,12 +113,11 @@ export default function HomeScreen() {
       </CountdownCircleTimer>
 
       <View style={styles.buttonContainer}>
-        <TouchableOpacity onPress={handleStartStop} style={styles.resetButton}>
-          <Text style={styles.buttonText}>{isRunning ? 'Stop' : 'Start'}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handleReset} style={styles.resetButton}>
-          <Text style={styles.resetButtonText}>Reset</Text>
-        </TouchableOpacity>
+        {!isRunning && (
+          <TouchableOpacity onPress={handleStart} style={styles.startButton}>
+            <Text style={styles.buttonText}>Start</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </ScrollView>
   );
@@ -133,6 +134,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#ecf0f1',
   },
   timerContainer: {
     justifyContent: 'center',
@@ -189,24 +191,11 @@ const styles = StyleSheet.create({
     width: '100%',
     marginTop: 20,
   },
-  intensityButton: {
-    backgroundColor: '#3498db',
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    borderRadius: 30,
-    marginHorizontal: 5,
-    width: '30%', // Adjust width as necessary
-  },
-  resetButton: {
+  startButton: {
     backgroundColor: '#3498db',
     paddingVertical: 15,
     paddingHorizontal: 40,
     borderRadius: 30,
     marginTop: 50,
-  },
-  resetButtonText: {
-    fontSize: 20,
-    color: '#fff',
-    fontWeight: 'bold',
   },
 });
