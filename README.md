@@ -1,4 +1,4 @@
-# CS262 Client
+# no-pain-no-main Client
 
 This is the client application for our [CS262 Fitness App](https://github.com/calvin-cs262-fall2024-no-pain-no-main/Project)
 
