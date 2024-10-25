@@ -48,8 +48,8 @@ export default function HomeScreen() {
 
   // Function to handle editing state
   const handleEdit = () => {
-    setMinutes(Math.floor(remainingTime / 60));
-    setSeconds(remainingTime % 60);
+    setMinutes(Math.floor(initialTime / 60));
+    setSeconds(initialTime % 60);
     setIsEditing(true);
   };
 
