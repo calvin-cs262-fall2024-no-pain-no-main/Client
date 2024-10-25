@@ -1,4 +1,6 @@
-# CS262 CLient
+# CS262 Client
+
+this is the client application for the [CS262-Fall24 team "No-pain-no-main" project](https://github.com/calvin-cs262-fall2024-no-pain-no-main/Project)
 
 ## Vision Statement
 
