@@ -3,14 +3,14 @@ import { StyleSheet, View, Text, TouchableOpacity, ScrollView } from 'react-nati
 import { CountdownCircleTimer } from 'react-native-countdown-circle-timer';
 import { Picker } from '@react-native-picker/picker';
 
-export default function HomeScreen() {
+export default function Timer() {
   const [isRunning, setIsRunning] = useState(false); // Timer state (running or not)
   const [remainingTime, setRemainingTime] = useState(150); // Default rest time (2:30)
   const [initialTime, setInitialTime] = useState(150); // Initial time for reset (2:30)
   const [isEditing, setIsEditing] = useState(false); // Editing state
   const [minutes, setMinutes] = useState(2); // Minutes for picker
   const [seconds, setSeconds] = useState(30); // Seconds for picker
-  const intervalRef = useRef(null); // Ref for the interval
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null); // Ref for the interval
 
   useEffect(() => {
     if (isRunning && remainingTime > 0) {
@@ -20,9 +20,15 @@ export default function HomeScreen() {
     } else if (remainingTime === 0) {
       handleReset();
     } else if (!isRunning && remainingTime !== 0) {
-      clearInterval(intervalRef.current);
-    }
-    return () => clearInterval(intervalRef.current);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+        }
+        return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+        };
   }, [isRunning, remainingTime]);
 
   // Function to start the timer
@@ -32,7 +38,9 @@ export default function HomeScreen() {
 
   // Function to reset the timer
   const handleReset = () => {
-    clearInterval(intervalRef.current);
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current as NodeJS.Timeout);
+    }
     setIsRunning(false);
     setRemainingTime(initialTime);
   };
