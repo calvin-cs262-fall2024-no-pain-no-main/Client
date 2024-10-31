@@ -4,26 +4,23 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useRouter } from "expo-router";
 
-export default function TabTwoScreen() {
+export default function Profile() {
   const router = useRouter();
 
-  async function gotoabout() {
-    router.push("/(about)/aboutpage");
-  }
   async function gotoTerms() {
-    router.push("/terms");
+    router.push("../profile/terms");
   }
   async function gotoUserinfo() {
-    router.push("/userinfo");
+    router.push("../profile/userinfo");
   }
   async function gotoGoals() {
-    router.push("/goals");
+    router.push("../profile/goals");
   }
   async function gotoPrivacy() {
-    router.push("/privacy");
+    router.push("../profile/privacy");
   }
   async function gotoNotifications() {
-    router.push("/notifications");
+    router.push("../profile/notifications");
   }
 
   return (
@@ -32,8 +29,8 @@ export default function TabTwoScreen() {
       <View style={styles.profileContainer}>
         <Ionicons name="person-circle-outline" size={80} color="#5A5A5A" />
         <View style={styles.profileInfo}>
-          <ThemedText style={styles.profileName}>No pain no main</ThemedText>
-          <Text style={styles.profileEmail}>cs262_d@example.com</Text>
+          <ThemedText style={styles.profileName}>Test Name</ThemedText>
+          <Text style={styles.profileEmail}>test@gmail.com</Text>
         </View>
       </View>
 
@@ -57,12 +54,6 @@ export default function TabTwoScreen() {
         <TouchableOpacity style={styles.settingOption} onPress={gotoPrivacy}>
           <Ionicons name="lock-closed-outline" size={24} color="gray" />
           <Text style={styles.settingText}>Privacy & Security</Text>
-        </TouchableOpacity>
-
-        {/* About */}
-        <TouchableOpacity style={styles.settingOption} onPress={gotoabout}>
-          <Ionicons name="information-circle-outline" size={24} color="gray" />
-          <Text style={styles.settingText}>About</Text>
         </TouchableOpacity>
 
         {/* Terms & Conditions */}
@@ -99,6 +90,7 @@ const styles = StyleSheet.create({
   profileName: {
     fontSize: 22,
     fontWeight: 'bold',
+    color: 'black',
   },
   profileEmail: {
     fontSize: 16,
