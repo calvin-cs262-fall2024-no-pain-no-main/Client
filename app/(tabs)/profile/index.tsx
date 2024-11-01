@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, ImageBackground } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useRouter } from "expo-router";
@@ -24,60 +24,70 @@ export default function Profile() {
   }
 
   return (
-    <ThemedView style={styles.container}>
-      {/* Profile Section */}
-      <View style={styles.profileContainer}>
-        <Ionicons name="person-circle-outline" size={80} color="#5A5A5A" />
-        <View style={styles.profileInfo}>
-          <ThemedText style={styles.profileName}>Test Name</ThemedText>
-          <Text style={styles.profileEmail}>test@gmail.com</Text>
+    <ImageBackground
+      source={require('../../../assets/images/gym-buddy.png')} // Replace with your image path
+      style={styles.background}
+      imageStyle={{ opacity: 0.3 }} // Adjust opacity for background image
+    >
+      <ThemedView style={styles.container}>
+        {/* Profile Section */}
+        <View style={styles.profileContainer}>
+          <Ionicons name="person-circle-outline" size={80} color="#5A5A5A" />
+          <View style={styles.profileInfo}>
+            <ThemedText style={styles.profileName}>Test Name</ThemedText>
+            <Text style={styles.profileEmail}>test@gmail.com</Text>
+          </View>
         </View>
-      </View>
 
-      {/* Settings Section */}
-      <View style={styles.settingsContainer}>
-        <ThemedText type="title" style={styles.sectionTitle}>Settings</ThemedText>
+        {/* Settings Section */}
+        <View style={styles.settingsContainer}>
+          <ThemedText type="title" style={styles.sectionTitle}>Settings</ThemedText>
 
-        {/* Workout Goals */}
-        <TouchableOpacity style={styles.settingOption} onPress={gotoGoals}>
-          <Ionicons name="fitness-outline" size={24} color="gray" />
-          <Text style={styles.settingText}>Workout Goals</Text>
-        </TouchableOpacity>
+          {/* Workout Goals */}
+          <TouchableOpacity style={styles.settingOption} onPress={gotoGoals}>
+            <Ionicons name="fitness-outline" size={24} color="gray" />
+            <Text style={styles.settingText}>Workout Goals</Text>
+          </TouchableOpacity>
 
-        {/* Notifications */}
-        <TouchableOpacity style={styles.settingOption} onPress={gotoNotifications}>
-          <Ionicons name="notifications-outline" size={24} color="gray" />
-          <Text style={styles.settingText}>Notifications</Text>
-        </TouchableOpacity>
+          {/* Notifications */}
+          <TouchableOpacity style={styles.settingOption} onPress={gotoNotifications}>
+            <Ionicons name="notifications-outline" size={24} color="gray" />
+            <Text style={styles.settingText}>Notifications</Text>
+          </TouchableOpacity>
 
-        {/* Privacy & Security */}
-        <TouchableOpacity style={styles.settingOption} onPress={gotoPrivacy}>
-          <Ionicons name="lock-closed-outline" size={24} color="gray" />
-          <Text style={styles.settingText}>Privacy & Security</Text>
-        </TouchableOpacity>
+          {/* Privacy & Security */}
+          <TouchableOpacity style={styles.settingOption} onPress={gotoPrivacy}>
+            <Ionicons name="lock-closed-outline" size={24} color="gray" />
+            <Text style={styles.settingText}>Privacy & Security</Text>
+          </TouchableOpacity>
 
-        {/* Terms & Conditions */}
-        <TouchableOpacity style={styles.settingOption} onPress={gotoTerms}>
-          <Ionicons name="document-text-outline" size={24} color="gray" />
-          <Text style={styles.settingText}>Terms & Conditions</Text>
-        </TouchableOpacity>
+          {/* Terms & Conditions */}
+          <TouchableOpacity style={styles.settingOption} onPress={gotoTerms}>
+            <Ionicons name="document-text-outline" size={24} color="gray" />
+            <Text style={styles.settingText}>Terms & Conditions</Text>
+          </TouchableOpacity>
 
-        {/* User Info */}
-        <TouchableOpacity style={styles.settingOption} onPress={gotoUserinfo}>
-          <Ionicons name="person-outline" size={24} color="gray" />
-          <Text style={styles.settingText}>User Info</Text>
-        </TouchableOpacity>
-
-      </View>
-    </ThemedView>
+          {/* User Info */}
+          <TouchableOpacity style={styles.settingOption} onPress={gotoUserinfo}>
+            <Ionicons name="person-outline" size={24} color="gray" />
+            <Text style={styles.settingText}>User Info</Text>
+          </TouchableOpacity>
+        </View>
+      </ThemedView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    resizeMode: 'cover', // Ensures the image covers the background
+  },
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#f5f5f5',  // Light background color for fitness theme
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',  // Slightly transparent white for readability
+    borderRadius: 10,
   },
   profileContainer: {
     flexDirection: 'row',

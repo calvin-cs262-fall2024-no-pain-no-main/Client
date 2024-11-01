@@ -1,21 +1,16 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TextInput, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 
 const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const router = useRouter();
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
 
   const handleLogin = async () => {
-    setLoading(true); // Start loading
-
+    // Start loading
     try {
-      const response = await fetch('https://no-pain-no-main.azurewebsites.net/login', { // Update to your server URL
+      const response = await fetch('https://no-pain-no-main.azurewebsites.net/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -36,16 +31,38 @@ const Login = () => {
     } catch (error) {
       console.error('Error logging in:', error);
       Alert.alert('Login Failed :(', error.message);
-      setError(error);
-    } finally {
-      setLoading(false); // Stop loading
     }
   };
 
+  const handleGetStarted = () => {
+    // Handle "Get Started" button press
+    router.push('/get-started'); // Adjust to your desired route
+  };
+
+  const handleAdmin = () => {
+    // Handle "Admin" button press
+    router.push('/(tabs)/workouts'); // Adjust to your desired route
+  };
+
+  const handleSignUp = () => {
+    // Handle sign-up navigation
+    router.push('/sign-up'); // Adjust to your desired route
+  };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Login</Text>
+      <TouchableOpacity style={styles.adminButton} onPress={handleAdmin}>
+        <Text style={styles.adminText}>Admin</Text>
+      </TouchableOpacity>
+
+      <Text style={styles.title}>REVIVE+</Text>
+      <Image 
+        source={require('../assets/images/gym-buddy.png')} // Correct image source
+        style={styles.image}
+        resizeMode="contain"
+      />
+
+
       <TextInput
         style={styles.input}
         placeholder="Username"
@@ -61,7 +78,14 @@ const Login = () => {
         onChangeText={setPassword}
         secureTextEntry
       />
-      <Button title="Login" onPress={handleLogin} />
+
+      <TouchableOpacity style={styles.signInButton} onPress={handleLogin}>
+        <Text style={styles.signInText}>Sign In</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={handleSignUp} style={styles.signUpContainer}>
+        <Text style={styles.signUpText}>Not a user yet? Sign up</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -71,17 +95,19 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     padding: 16,
-  },
-  item: {
-    marginVertical: 8,
-    padding: 10,
-    backgroundColor: '#f9c2ff',
-    borderRadius: 5,
+    backgroundColor: '#f5f5f5',  // Background color
   },
   title: {
     fontSize: 24,
     marginBottom: 16,
     textAlign: 'center',
+    fontWeight: 'bold',
+  },
+  image: {
+    width: 250,
+    height: 250,
+    marginVertical: 20,
+    alignSelf: 'center',
   },
   input: {
     height: 40,
@@ -89,6 +115,52 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 12,
     paddingHorizontal: 8,
+    borderRadius: 5,
+  },
+  getStartedButton: {
+    backgroundColor: '#6200ea',  // Purple color
+    padding: 12,
+    borderRadius: 5,
+    marginBottom: 12,
+    alignItems: 'center',
+  },
+  getStartedText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  signInButton: {
+    backgroundColor: '#007BFF', // Blue color for Sign In button
+    padding: 12,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  signInText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  adminButton: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    backgroundColor: '#f0f0f0', // Light gray background
+    padding: 8,
+    borderRadius: 5,
+  },
+  adminText: {
+    color: '#333',
+    fontSize: 12,
+  },
+  signUpContainer: {
+    marginTop: 12,
+    alignItems: 'center',
+  },
+  signUpText: {
+    color: '#007BFF', // Blue color for sign-up text
+    fontSize: 16,
+    textDecorationLine: 'underline',
   },
 });
 
