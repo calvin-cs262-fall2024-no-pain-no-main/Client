@@ -2,7 +2,7 @@ import React from 'react';
 import { Text, StyleSheet, TouchableOpacity, ScrollView, ImageBackground } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons, FontAwesome } from '@expo/vector-icons';
-
+import { ThemeProvider } from '@react-navigation/native';
 // Import the local image
 const backgroundImage = require('../../../assets/images/gym-buddy.png'); // Update the path according to your folder structure
 
@@ -21,7 +21,7 @@ const Workouts = () => {
         <ImageBackground 
             source={backgroundImage} // Use the imported image
             style={styles.background}
-            imageStyle={{ opacity: 0.1 }} // Adjust opacity to make it half-transparent
+            imageStyle={{ opacity: 0.3 }} // Adjust opacity to make it half-transparent
         >
             <ScrollView contentContainerStyle={styles.container}>
                 {/* Intro Section */}
@@ -31,7 +31,7 @@ const Workouts = () => {
                 {/* Empty Workout Button */}
                 <TouchableOpacity style={[styles.button, styles.emptyButton]} onPress={startEmptyWorkout}>
                     <FontAwesome name="plus-circle" size={24} color="#3498db" style={styles.icon} />
-                    <Text style={styles.buttonText}>Start Empty Workout</Text>
+                    <Text style={styles.emptyButtonText}>Start Empty Workout</Text>
                 </TouchableOpacity>
 
                 {/* Your Workouts Button */}
@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         padding: 20,
-        backgroundColor: 'rgba(0, 0, 0, 0.3)', // Additional overlay for readability
+        backgroundColor: 'rgba(255, 255, 255, 0.2)', // Additional overlay for readability
     },
     title: {
         fontSize: 28,
@@ -85,19 +85,24 @@ const styles = StyleSheet.create({
         elevation: 3,
     },
     emptyButton: {
-        backgroundColor: '#eaf6fc',
+        backgroundColor: 'rgba(234, 246, 252, 0.8)', // More translucent
     },
     existingButton: {
-        backgroundColor: '#3498db',
+        backgroundColor: 'rgba(52, 152, 219, 0.8)', // Lighter blue and more translucent
     },
     icon: {
         marginRight: 10,
     },
     buttonText: {
         fontSize: 18,
-        color: '#ffffff',
+        color: '#d3d3d3', // Light gray text
         fontWeight: 'bold',
     },
+    emptyButtonText: {
+        fontSize: 18,
+        color: '#d3d3d3', // Light gray text
+        fontWeight: 'bold',
+    }
 });
 
 export default Workouts;
