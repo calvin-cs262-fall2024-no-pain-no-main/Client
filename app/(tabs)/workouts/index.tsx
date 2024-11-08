@@ -1,108 +1,150 @@
 import React from 'react';
-import { Text, StyleSheet, TouchableOpacity, ScrollView, ImageBackground } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import Icon from 'react-native-vector-icons/FontAwesome5';
 import { useRouter } from 'expo-router';
-import { MaterialIcons, FontAwesome } from '@expo/vector-icons';
-import { ThemeProvider } from '@react-navigation/native';
-// Import the local image
-const backgroundImage = require('../../../assets/images/gym-buddy.png'); // Update the path according to your folder structure
+import { useNavigation } from '@react-navigation/native'
 
-const Workouts = () => {
+const WorkoutPage = () => {
     const router = useRouter();
-
-    async function yourWorkouts() {
-        router.push(`../workouts/your-workouts`);
-    }
-
-    async function startEmptyWorkout() {
-        router.push('../workouts/empty-workout');
+    const handleCreateWorkout = () => {
+        router.push('/workouts/empty-workout');
     }
 
     return (
-        <ImageBackground 
-            source={backgroundImage} // Use the imported image
-            style={styles.background}
-            imageStyle={{ opacity: 0.3 }} // Adjust opacity to make it half-transparent
-        >
-            <ScrollView contentContainerStyle={styles.container}>
-                {/* Intro Section */}
-                <Text style={styles.title}>Welcome to REVIVE+</Text>
-                <Text style={styles.subtitle}>Choose an existing workout or create your own custom set!</Text>
+        <ScrollView style={styles.container}>
+            {/* Top Icon Placeholder */}
+            <View style={styles.topIconContainer}>
+                <Icon name="dumbbell" size={80} color="#A5D6A7" />
+            </View>
 
-                {/* Empty Workout Button */}
-                <TouchableOpacity style={[styles.button, styles.emptyButton]} onPress={startEmptyWorkout}>
-                    <FontAwesome name="plus-circle" size={24} color="#3498db" style={styles.icon} />
-                    <Text style={styles.emptyButtonText}>Start Empty Workout</Text>
-                </TouchableOpacity>
+            {/* Recent Workouts Section */}
+            <Text style={styles.sectionTitle}>Recent Workouts</Text>
+            <View style={styles.recentWorkoutsContainer}>
+                <View style={styles.recentWorkoutBox}>
+                    <Text style={styles.recentWorkoutText}>
+                        You haven’t worked out yet. You suck, lazy bum!
+                    </Text>
+                </View>
+                <View style={styles.recentWorkoutBox}></View>
+            </View>
 
-                {/* Your Workouts Button */}
-                <TouchableOpacity style={[styles.button, styles.existingButton]} onPress={yourWorkouts}>
-                    <MaterialIcons name="fitness-center" size={24} color="#ffffff" style={styles.icon} />
-                    <Text style={styles.buttonText}>Your Workouts</Text>
-                </TouchableOpacity>
-            </ScrollView>
-        </ImageBackground>
+            {/* Workout Templates Section */}
+            <Text style={styles.sectionTitle}>Workout Templates</Text>
+            <View style={styles.templatesContainer}>
+                {[...Array(4)].map((_, index) => (
+                    <TouchableOpacity key={index} style={styles.templateBox}>
+                        <Text style={styles.templateTitle}>Push</Text>
+                        <Text style={styles.templateDescription}>
+                            Bench Press (Barbell), Chest Flys, Shoulder Press (Machine),
+                            Lateral Raise (Cable), Skull Crusher (Barbell)
+                        </Text>
+                        <View style={styles.iconContainer}>
+                            <Icon name="edit" size={16} color="#A5D6A7" style={styles.icon} />
+                        </View>
+                    </TouchableOpacity>
+                ))}
+            </View>
+
+            {/* Create New Workout Button */}
+            <TouchableOpacity style={styles.createWorkoutButton} onPress={handleCreateWorkout}>
+                <Text style={styles.createWorkoutButtonText}>Create New Workout</Text>
+            </TouchableOpacity>
+
+            {/* Bottom Icon Placeholder */}
+            <View style={styles.bottomIconContainer}>
+                <Icon name="user-circle" size={60} color="#898989" />
+            </View>
+        </ScrollView>
     );
 };
 
 const styles = StyleSheet.create({
-    background: {
-        flex: 1,
-        resizeMode: 'cover', // Ensures the image covers the background
-    },
     container: {
-        flexGrow: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
+        flex: 1,
         padding: 20,
-        backgroundColor: 'rgba(255, 255, 255, 0.2)', // Additional overlay for readability
+        backgroundColor: '#0D1B2A',
     },
-    title: {
-        fontSize: 28,
-        fontWeight: '700',
-        color: '#fff',
-        textAlign: 'center',
+    topIconContainer: {
+        alignItems: 'center',
+        marginBottom: 20,
+        paddingTop: 20,
+    },
+    sectionTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#FFFFFF',
         marginBottom: 10,
     },
-    subtitle: {
-        fontSize: 16,
-        color: '#e0e0e0',
-        textAlign: 'center',
-        marginBottom: 30,
-        paddingHorizontal: 10,
-    },
-    button: {
+    recentWorkoutsContainer: {
         flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 15,
-        borderRadius: 15,
-        marginVertical: 10,
-        width: '90%',
-        justifyContent: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.15,
-        shadowRadius: 5,
-        elevation: 3,
+        justifyContent: 'space-between',
+        marginBottom: 20,
     },
-    emptyButton: {
-        backgroundColor: 'rgba(234, 246, 252, 0.8)', // More translucent
-    },
-    existingButton: {
-        backgroundColor: 'rgba(52, 152, 219, 0.8)', // Lighter blue and more translucent
-    },
-    icon: {
+    recentWorkoutBox: {
+        flex: 1,
+        backgroundColor: '#1B263B',
+        borderRadius: 8,
+        padding: 20,
         marginRight: 10,
     },
-    buttonText: {
-        fontSize: 18,
-        color: '#d3d3d3', // Light gray text
-        fontWeight: 'bold',
+    recentWorkoutText: {
+        color: '#FFFFFF',
+        fontSize: 14,
+        textAlign: 'center',
     },
-    emptyButtonText: {
-        fontSize: 18,
-        color: '#d3d3d3', // Light gray text
+    templatesContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+        marginBottom: 20,
+    },
+    templateBox: {
+        width: '48%',
+        backgroundColor: '#1B263B',
+        borderRadius: 8,
+        padding: 15,
+        marginBottom: 15,
+        position: 'relative',
+    },
+    templateTitle: {
+        fontSize: 16,
         fontWeight: 'bold',
-    }
+        color: '#FFFFFF',
+        marginBottom: 5,
+    },
+    templateDescription: {
+        color: '#FFFFFF',
+        fontSize: 12,
+    },
+    iconContainer: {
+        flexDirection: 'row',
+        position: 'absolute',
+        top: 10,
+        right: 10,
+    },
+    icon: {
+        marginLeft: 10,
+    },
+    createWorkoutButton: {
+        backgroundColor: '#2E8B57',
+        padding: 15,
+        borderRadius: 8,
+        alignItems: 'center',
+        marginTop: 20,
+        marginBottom: 40,
+    },
+    createWorkoutButtonText: {
+        color: '#FFFFFF',
+        fontWeight: 'bold',
+        fontSize: 16,
+    },
+    bottomIconContainer: {
+        alignItems: 'center',
+        paddingBottom: 20,
+        opacity: 0.5,
+    },
 });
 
-export default Workouts;
+export default WorkoutPage;
+
+
