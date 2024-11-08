@@ -1,6 +1,6 @@
 # no-pain-no-main Client
 
-This is the client application for our [CS262 Project: VIGIL Fitness App](https://github.com/calvin-cs262-fall2024-no-pain-no-main/Project)
+This is the client application for our [VIGIL Fitness App](https://github.com/calvin-cs262-fall2024-no-pain-no-main/Project)
 
 Our back-end code can be found [here](https://github.com/calvin-cs262-fall2024-no-pain-no-main/Service)
 
