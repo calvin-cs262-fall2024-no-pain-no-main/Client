@@ -15,7 +15,7 @@ const Workouts = () => {
 // Modify the state when deleting a workout (e.g., removing it from an array)
 const [workouts, setWorkouts] = React.useState([
     { id: 1, name: 'Workout 1' },
-    { id: 2, name: 'Workout 2' },
+    { id: 2, name: 'Workout 2' }, //aa
 ]);
 
 async function deleteWorkout(workoutId) {
