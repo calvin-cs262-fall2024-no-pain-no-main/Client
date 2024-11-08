@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'transparent',
     },
     timeContainer: {
-        width: 60,  // Ensures the time text has the same width as other elements
+        width: 60,  
         justifyContent: 'center',
         alignItems: 'center',
     },

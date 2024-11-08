@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
         flexGrow: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 20,
+        padding: 21,
         backgroundColor: '#0D1B2A',
     },
     sectionTitle: {
