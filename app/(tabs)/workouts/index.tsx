@@ -158,6 +158,10 @@ const styles = StyleSheet.create({
     },
 });
 
+<<<<<<< HEAD
 export default WorkoutPage;
 
 
+=======
+export default Workouts;
+>>>>>>> 3b25a1e (sp3)
