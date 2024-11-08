@@ -10,6 +10,19 @@ const WorkoutPage = () => {
         router.push('/workouts/empty-workout');
     }
 
+// Modify the state when deleting a workout (e.g., removing it from an array)
+const [workouts, setWorkouts] = React.useState([
+    { id: 1, name: 'Workout 1' },
+    { id: 2, name: 'Workout 2' },
+]);
+
+async function deleteWorkout(workoutId) {
+    const updatedWorkouts = workouts.filter(workout => workout.id !== workoutId);
+    setWorkouts(updatedWorkouts);
+    console.log(`Deleted workout: ${workoutId}`);
+}
+
+
     return (
         <ScrollView style={styles.container}>
             {/* Top Icon Placeholder */}
