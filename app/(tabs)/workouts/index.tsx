@@ -1,19 +1,21 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import { Text, StyleSheet, TouchableOpacity, ScrollView, View, SafeAreaView } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useNavigation } from '@react-navigation/native'
+import { MaterialIcons, FontAwesome } from '@expo/vector-icons';
 
-const WorkoutPage = () => {
+const backgroundImage = require('../../../assets/images/gym-buddy.png'); // Update the path according to your folder structure
+
+const Workouts = () => {
     const router = useRouter();
-    const handleCreateWorkout = () => {
-        router.push('/workouts/empty-workout');
+
+    async function startEmptyWorkout() {
+        router.push('../workouts/empty-workout');
     }
 
 // Modify the state when deleting a workout (e.g., removing it from an array)
 const [workouts, setWorkouts] = React.useState([
     { id: 1, name: 'Workout 1' },
-    { id: 2, name: 'Workout 2' },
+    { id: 2, name: 'Workout 2' }, //aa
 ]);
 
 async function deleteWorkout(workoutId) {
@@ -24,140 +26,150 @@ async function deleteWorkout(workoutId) {
 
 
     return (
-        <ScrollView style={styles.container}>
-            {/* Top Icon Placeholder */}
-            <View style={styles.topIconContainer}>
-                <Icon name="dumbbell" size={80} color="#A5D6A7" />
-            </View>
-
-            {/* Recent Workouts Section */}
-            <Text style={styles.sectionTitle}>Recent Workouts</Text>
-            <View style={styles.recentWorkoutsContainer}>
-                <View style={styles.recentWorkoutBox}>
-                    <Text style={styles.recentWorkoutText}>
-                        You haven’t worked out yet. You suck, lazy bum!
-                    </Text>
-                </View>
-                <View style={styles.recentWorkoutBox}></View>
-            </View>
-
-            {/* Workout Templates Section */}
-            <Text style={styles.sectionTitle}>Workout Templates</Text>
-            <View style={styles.templatesContainer}>
-                {[...Array(4)].map((_, index) => (
-                    <TouchableOpacity key={index} style={styles.templateBox}>
-                        <Text style={styles.templateTitle}>Push</Text>
-                        <Text style={styles.templateDescription}>
-                            Bench Press (Barbell), Chest Flys, Shoulder Press (Machine),
-                            Lateral Raise (Cable), Skull Crusher (Barbell)
-                        </Text>
-                        <View style={styles.iconContainer}>
-                            <Icon name="edit" size={16} color="#A5D6A7" style={styles.icon} />
-                        </View>
+        <SafeAreaView style={styles.safeArea}>
+            <ScrollView contentContainerStyle={styles.container}>
+                {/* Recent Workouts Section */}
+                <Text style={styles.sectionTitle}>Recent Workouts</Text>
+                <View style={styles.gridContainer}>
+                    <TouchableOpacity style={styles.card}>
+                        <Text style={styles.cardText}>Workout 1</Text>
+                        <TouchableOpacity 
+                            style={styles.trashButton} 
+                            onPress={() => deleteWorkout(1)}
+                        >
+                            <MaterialIcons name="delete" size={24} color="#fff" />
+                        </TouchableOpacity>
                     </TouchableOpacity>
-                ))}
-            </View>
+                    <TouchableOpacity style={styles.card}>
+                        <Text style={styles.cardText}>Workout 2</Text>
+                        <TouchableOpacity 
+                            style={styles.trashButton} 
+                            onPress={() => deleteWorkout(2)}
+                        >
+                            <MaterialIcons name="delete" size={24} color="#fff" />
+                        </TouchableOpacity>
+                    </TouchableOpacity>
+                </View>
 
-            {/* Create New Workout Button */}
-            <TouchableOpacity style={styles.createWorkoutButton} onPress={handleCreateWorkout}>
-                <Text style={styles.createWorkoutButtonText}>Create New Workout</Text>
-            </TouchableOpacity>
+                {/* Suggested Workouts Section */}
+                <Text style={styles.sectionTitle}>Workouts Templates</Text>
+                <View style={styles.gridContainer}>
+                    <TouchableOpacity style={styles.card}>
+                        <Text style={styles.cardTitle}>Push</Text>
+                        <Text style={styles.cardDescription}>A workout focused on pushing movements, targeting chest, shoulders, and triceps.</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.card}>
+                        <Text style={styles.cardTitle}>Pull</Text>
+                        <Text style={styles.cardDescription}>A workout that emphasizes pulling movements, focusing on back and biceps.</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.card}>
+                        <Text style={styles.cardTitle}>Legs</Text>
+                        <Text style={styles.cardDescription}>Leg-focused exercises targeting quads, hamstrings, and calves.</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.card}>
+                        <Text style={styles.cardTitle}>Special</Text>
+                        <Text style={styles.cardDescription}>A mix of compound exercises for a full-body workout.</Text>
+                    </TouchableOpacity>
+                </View>
 
-            {/* Bottom Icon Placeholder */}
-            <View style={styles.bottomIconContainer}>
-                <Icon name="user-circle" size={60} color="#898989" />
-            </View>
-        </ScrollView>
+                {/* Empty Workout Button */}
+                <TouchableOpacity style={[styles.button, styles.emptyButton]} onPress={startEmptyWorkout}>
+                    <FontAwesome name="plus-circle" size={24} color="#3498db" style={styles.icon} />
+                    <Text style={styles.emptyButtonText}>Create Empty Workout</Text>
+                </TouchableOpacity>
+            </ScrollView>
+        </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
-    container: {
+    safeArea: {
         flex: 1,
-        padding: 20,
         backgroundColor: '#0D1B2A',
     },
-    topIconContainer: {
+    container: {
+        flexGrow: 1,
+        justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 20,
-        paddingTop: 20,
+        padding: 21,
+        backgroundColor: '#0D1B2A',
     },
     sectionTitle: {
-        fontSize: 20,
+        fontSize: 30,
         fontWeight: 'bold',
-        color: '#FFFFFF',
-        marginBottom: 10,
+        color: '#fff',
+        marginBottom: 15,
+        textAlign: 'left',
+        width: '100%',
     },
-    recentWorkoutsContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 20,
-    },
-    recentWorkoutBox: {
-        flex: 1,
-        backgroundColor: '#1B263B',
-        borderRadius: 8,
-        padding: 20,
-        marginRight: 10,
-    },
-    recentWorkoutText: {
-        color: '#FFFFFF',
-        fontSize: 14,
-        textAlign: 'center',
-    },
-    templatesContainer: {
+    gridContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'space-between',
-        marginBottom: 20,
+        width: '100%',
+        marginBottom: 30,
     },
-    templateBox: {
+    card: {
         width: '48%',
-        backgroundColor: '#1B263B',
-        borderRadius: 8,
-        padding: 15,
-        marginBottom: 15,
+        backgroundColor: '#2C3E50',
+        padding: 30,
+        marginBottom: 20,
+        borderRadius: 10,
+        alignItems: 'left',
+        justifyContent: 'center',
         position: 'relative',
     },
-    templateTitle: {
+    cardText: {
+        color: '#fff',
         fontSize: 16,
+        textAlign: 'left',
+    },
+    cardTitle: {
+        color: '#fff',
+        fontSize: 18,
         fontWeight: 'bold',
-        color: '#FFFFFF',
+        textAlign: 'left',
         marginBottom: 5,
     },
-    templateDescription: {
-        color: '#FFFFFF',
+    cardDescription: {
+        color: '#e0e0e0',
         fontSize: 12,
+        textAlign: 'left',
     },
-    iconContainer: {
-        flexDirection: 'row',
+    trashButton: {
         position: 'absolute',
-        top: 10,
-        right: 10,
+        top: 2,
+        right: 2,
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        borderRadius: 15,
+        padding: 4,
+    },
+    button: {
+        flexDirection: 'row',
+        color: '#A5D6A7',
+        alignItems: 'center',
+        paddingVertical: 15,
+        borderRadius: 15,
+        marginVertical: 10,
+        width: '90%',
+        justifyContent: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 5,
+        elevation: 3,
+    },
+    emptyButton: {
+        backgroundColor: '#A5D6A7',
     },
     icon: {
-        marginLeft: 10,
+        marginRight: 10,
     },
-    createWorkoutButton: {
-        backgroundColor: '#2E8B57',
-        padding: 15,
-        borderRadius: 8,
-        alignItems: 'center',
-        marginTop: 20,
-        marginBottom: 40,
-    },
-    createWorkoutButtonText: {
-        color: '#FFFFFF',
+    emptyButtonText: {
+        fontSize: 18,
+        color: 'black',
         fontWeight: 'bold',
-        fontSize: 16,
-    },
-    bottomIconContainer: {
-        alignItems: 'center',
-        paddingBottom: 20,
-        opacity: 0.5,
     },
 });
 
-export default WorkoutPage;
-
-
+export default Workouts;
