@@ -1,40 +1,38 @@
-import { Tabs, Stack } from 'expo-router';
+import { Tabs } from 'expo-router';
 import React from 'react';
 import { TabBarIcon } from '@/components/navigation/TabBarIcon';
-import { useColorScheme } from '@/hooks/useColorScheme';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
   return (
-      <Tabs screenOptions={{ headerShown: false }} >
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: {
+          backgroundColor: '#0D1B2A', // Tab bar background color
+        },
+        tabBarActiveTintColor: '#A5D6A7', // Active tab icon color
+        tabBarInactiveTintColor: '#A5D6A7', // Inactive tab icon color
+      }}
+    >
       <Tabs.Screen
-          name="workouts"
-          options={{
-            title: 'Workouts',
-            tabBarIcon: ({ color, focused }) => (
-              <TabBarIcon name={focused ? 'menu' : 'menu-outline'} color={color} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="timer"
-          options={{
-            title: 'Timer',
-            tabBarIcon: ({ color, focused }) => (
-              <TabBarIcon name={focused ? 'timer' : 'timer-outline'} color={color} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="profile"
-          options={{
-            title: 'Profile',
-            tabBarIcon: ({ color, focused }) => (
-              <TabBarIcon name={focused ? 'person' : 'person-outline'} color={color} />
-            ),
-          }}
-        />
-      </Tabs>
+        name="workouts"
+        options={{
+          title: 'Workouts',
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name={focused ? 'menu' : 'menu-outline'} color={color} />
+          ),
+        }}
+      />
+      {/* Timer tab has been removed */}
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name={focused ? 'person' : 'person-outline'} color={color} />
+          ),
+        }}
+      />
+    </Tabs>
   );
 }
