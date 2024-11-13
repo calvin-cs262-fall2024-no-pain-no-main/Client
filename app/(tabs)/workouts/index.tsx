@@ -1,10 +1,9 @@
 import React from 'react';
 import { Text, StyleSheet, TouchableOpacity, ScrollView, View, SafeAreaView, Image } from 'react-native';
 import { useRouter } from 'expo-router';
-import { MaterialIcons, FontAwesome } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 
-const backgroundImage = require('../../../assets/images/gym-buddy.png');
-const headerImage = require('../../../assets/images/VigilWeight.png'); // Import the image
+const headerImage = require('../../../assets/images/VigilWeight.png');
 
 const Workouts = () => {
     const router = useRouter();
@@ -27,56 +26,43 @@ const Workouts = () => {
     return (
         <SafeAreaView style={styles.safeArea}>
             <ScrollView contentContainerStyle={styles.container}>
-                {/* Header Image */}
                 <Image source={headerImage} style={styles.headerImage} />
 
-                {/* Recent Workouts Section */}
                 <Text style={styles.sectionTitle} numberOfLines={1} ellipsizeMode="tail">
-                    Recent Workouts</Text>
+                    Recent Workouts
+                </Text>
                 <View style={styles.gridContainer}>
-                    <TouchableOpacity style={styles.card}>
-                        <Text style={styles.cardText}>Workout 1</Text>
-                        <TouchableOpacity 
-                            style={styles.trashButton} 
-                            onPress={() => deleteWorkout(1)}
-                        >
-                            <MaterialIcons name="delete" size={24} color="#fff" />
+                    {workouts.map(workout => (
+                        <TouchableOpacity key={workout.id} style={styles.card}>
+                            <Text style={styles.cardText}>{workout.name}</Text>
+                            <TouchableOpacity
+                                style={styles.trashButton}
+                                onPress={() => deleteWorkout(workout.id)}
+                            >
+                                <MaterialIcons name="delete" size={24} color="#fff" />
+                            </TouchableOpacity>
                         </TouchableOpacity>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.card}>
-                        <Text style={styles.cardText}>Workout 2</Text>
-                        <TouchableOpacity 
-                            style={styles.trashButton} 
-                            onPress={() => deleteWorkout(2)}
-                        >
-                            <MaterialIcons name="delete" size={24} color="#fff" />
-                        </TouchableOpacity>
-                    </TouchableOpacity>
+                    ))}
                 </View>
 
-                {/* Suggested Workouts Section */}
                 <Text style={styles.sectionTitle} numberOfLines={1} ellipsizeMode="tail">
-                    Workouts Templates </Text>
+                    Workouts Templates
+                </Text>
                 <View style={styles.gridContainer}>
-                    <TouchableOpacity style={styles.card}>
+                    <TouchableOpacity style={styles.card} onPress={() => router.push('../workouts/push-workout')}>
                         <Text style={styles.cardTitle}>Push</Text>
                         <Text style={styles.cardDescription}>A workout focused on pushing movements, targeting chest, shoulders, and triceps.</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.card}>
+                    <TouchableOpacity style={styles.card} onPress={() => router.push('../workouts/pull-workout')}>
                         <Text style={styles.cardTitle}>Pull</Text>
                         <Text style={styles.cardDescription}>A workout that emphasizes pulling movements, focusing on back and biceps.</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.card}>
+                    <TouchableOpacity style={styles.card} onPress={() => router.push('../workouts/legs-workout')}>
                         <Text style={styles.cardTitle}>Legs</Text>
                         <Text style={styles.cardDescription}>Leg-focused exercises targeting quads, hamstrings, and calves.</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.card}>
-                        <Text style={styles.cardTitle}>Special</Text>
-                        <Text style={styles.cardDescription}>A mix of compound exercises for a full-body workout.</Text>
-                    </TouchableOpacity>
                 </View>
 
-                {/* Empty Workout Button */}
                 <TouchableOpacity style={[styles.button, styles.emptyButton]} onPress={startEmptyWorkout}>
                     <Text style={styles.emptyButtonText}>Create Empty Workout</Text>
                 </TouchableOpacity>
@@ -110,8 +96,8 @@ const styles = StyleSheet.create({
         color: '#fff',
         marginBottom: 15,
         textAlign: 'left',
-        width: '100%', // Ensures the text stays within the available width
-        maxWidth: '100%', // Prevents overflow
+        width: '100%',
+        maxWidth: '100%',
     },
     gridContainer: {
         flexDirection: 'row',
