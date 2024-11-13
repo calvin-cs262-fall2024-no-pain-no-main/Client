@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, Image } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useFonts } from 'expo-font';
 import { Ionicons } from '@expo/vector-icons'; // For icons
 import Icon from 'react-native-vector-icons/FontAwesome5';
 
@@ -43,25 +42,13 @@ const Login = () => {
     router.push('/(tabs)/workouts'); // Adjust to your desired route for admin
   };
 
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
-
-  if (!loaded) return null;
-
   return (
     <View style={styles.container}>
+      
+
       <TouchableOpacity style={styles.adminButton} onPress={handleAdmin}>
         <Text style={styles.adminText}>Admin</Text>
       </TouchableOpacity>
-
-      {/* Title and Dumbbell Icon */}
-      <View style={styles.titleContainer}>
-        <Icon name="dumbbell" size={70} color="#A5D6A7" style={styles.dumbbellIcon} />
-        <Text style={styles.title}>VIGIL</Text>
-      </View>
-
-      <Text style={styles.text}>Optimized rest and workout</Text>
 
       {/* Username Input */}
       <View style={styles.inputContainer}>
@@ -112,30 +99,11 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: '#0D1B2A',
   },
-  text: {
-    fontSize: 20,
-    color: 'white',
-    fontFamily: 'SpaceMono',
-    textAlign: 'right',
-    marginBottom: 120, // Removed marginBottom
-    marginTop: 0, // Ensure no space above the text
-  },
-  titleContainer: {
-    flexDirection: 'row', // Align items horizontally
-    alignItems: 'center', // Center the items vertically
-    marginBottom: -25,
-    marginLeft :11
-  },
-  title: {
-    fontSize: 85, // Set marginBottom to 0 to avoid space below the title
-    textAlign: 'right',
-    fontWeight: 'bold',
-    color: 'white',
-    fontFamily: 'SpaceMono', // Add some space between the title and the icon
-  },
-  dumbbellIcon: {
-    marginRight:15
-    // You can adjust this style to change the position of the icon if needed
+  titleImage: {
+    width: '90%',
+    height : '20%',
+    alignSelf: 'center',
+    marginBottom: 100,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -156,18 +124,25 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   signInButton: {
-    backgroundColor: '#A5D6A7',
-    paddingVertical: 10, // Reduced padding for narrower button
-    paddingHorizontal: 25, // Adjusted horizontal padding
-    borderRadius: 5,
+    backgroundColor: '#0E2A2B', // Dark green background color
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 10, // Rounded corners
     alignItems: 'center',
     marginBottom: 12,
-    marginHorizontal: 40, // Center the button
+    marginHorizontal: 40,
+    borderWidth: 1.5,
+    borderColor: '#A5D6A7', // Light green border color
+    shadowColor: '#A5D6A7', // Glow effect color
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
+    elevation: 5, // For Android shadow effect
   },
   signInText: {
-    color: '#fff',
+    color: '#A5D6A7', // Light green text color
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
   },
   signUpContainer: {
     flexDirection: 'row',
