@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, SafeAreaView, Text, TextInput, Modal, FlatList, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, SafeAreaView, Text, TextInput, Modal, FlatList, TouchableOpacity, StyleSheet, ScrollView, Image } from 'react-native';
 import { CheckBox } from 'react-native-elements';
 import Icon from 'react-native-vector-icons/FontAwesome5';
+const headerImage = require('../../../assets/images/VigilWeight.png');
 
 interface Exercise {
     id: string;
@@ -147,7 +148,7 @@ const ExerciseApp = () => {
             <ScrollView style={styles.container}>
                 {/* Top Icon Placeholder */}
                 <View style={styles.topIconContainer}>
-                    <Icon name="dumbbell" size={80} color="#A5D6A7" />
+                <Image source={headerImage} style={styles.headerImage} />
                 </View>
 
                 {/* Divider Line */}
@@ -279,11 +280,16 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         paddingTop: 20,
     },
+    headerImage: {
+        width: '50%',
+        height: 75,
+        resizeMode: 'contain',
+        alignSelf: 'center',
+    },
     divider: {
         height: 1,
         backgroundColor: '#A5D6A7',
-        marginVertical: 10,
-        opacity: 0.5,
+        opacity: 0.1,
     },
     exerciseContainer: {
         marginBottom: 20,
@@ -360,13 +366,15 @@ const styles = StyleSheet.create({
     },
     addExerciseButton: {
         backgroundColor: '#A5D6A7',
-        padding: 15,
-        borderRadius: 8,
+        padding: 12,
+        borderRadius: 12,
         alignItems: 'center',
         marginVertical: 20,
+        width: '80%',
+        alignSelf: 'center',
     },
     addExerciseText: {
-        color: '#0D1B2A',
+        color: 'white',
         fontWeight: 'bold',
     },
     bottomIconContainer: {

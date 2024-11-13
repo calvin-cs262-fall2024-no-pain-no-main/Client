@@ -1,35 +1,38 @@
 import React from 'react';
-import { Text, StyleSheet, TouchableOpacity, ScrollView, View, SafeAreaView } from 'react-native';
+import { Text, StyleSheet, TouchableOpacity, ScrollView, View, SafeAreaView, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons, FontAwesome } from '@expo/vector-icons';
 
-const backgroundImage = require('../../../assets/images/gym-buddy.png'); // Update the path according to your folder structure
+const backgroundImage = require('../../../assets/images/gym-buddy.png');
+const headerImage = require('../../../assets/images/VigilWeight.png'); // Import the image
 
 const Workouts = () => {
     const router = useRouter();
+
+    const [workouts, setWorkouts] = React.useState([
+        { id: 1, name: 'Workout 1' },
+        { id: 2, name: 'Workout 2' },
+    ]);
 
     async function startEmptyWorkout() {
         router.push('../workouts/empty-workout');
     }
 
-// Modify the state when deleting a workout (e.g., removing it from an array)
-const [workouts, setWorkouts] = React.useState([
-    { id: 1, name: 'Workout 1' },
-    { id: 2, name: 'Workout 2' }, //aa
-]);
-
-async function deleteWorkout(workoutId) {
-    const updatedWorkouts = workouts.filter(workout => workout.id !== workoutId);
-    setWorkouts(updatedWorkouts);
-    console.log(`Deleted workout: ${workoutId}`);
-}
-
+    async function deleteWorkout(workoutId) {
+        const updatedWorkouts = workouts.filter(workout => workout.id !== workoutId);
+        setWorkouts(updatedWorkouts);
+        console.log(`Deleted workout: ${workoutId}`);
+    }
 
     return (
         <SafeAreaView style={styles.safeArea}>
             <ScrollView contentContainerStyle={styles.container}>
+                {/* Header Image */}
+                <Image source={headerImage} style={styles.headerImage} />
+
                 {/* Recent Workouts Section */}
-                <Text style={styles.sectionTitle}>Recent Workouts</Text>
+                <Text style={styles.sectionTitle} numberOfLines={1} ellipsizeMode="tail">
+                    Recent Workouts</Text>
                 <View style={styles.gridContainer}>
                     <TouchableOpacity style={styles.card}>
                         <Text style={styles.cardText}>Workout 1</Text>
@@ -52,7 +55,8 @@ async function deleteWorkout(workoutId) {
                 </View>
 
                 {/* Suggested Workouts Section */}
-                <Text style={styles.sectionTitle}>Workouts Templates</Text>
+                <Text style={styles.sectionTitle} numberOfLines={1} ellipsizeMode="tail">
+                    Workouts Templates </Text>
                 <View style={styles.gridContainer}>
                     <TouchableOpacity style={styles.card}>
                         <Text style={styles.cardTitle}>Push</Text>
@@ -74,7 +78,6 @@ async function deleteWorkout(workoutId) {
 
                 {/* Empty Workout Button */}
                 <TouchableOpacity style={[styles.button, styles.emptyButton]} onPress={startEmptyWorkout}>
-                    <FontAwesome name="plus-circle" size={24} color="#3498db" style={styles.icon} />
                     <Text style={styles.emptyButtonText}>Create Empty Workout</Text>
                 </TouchableOpacity>
             </ScrollView>
@@ -89,18 +92,26 @@ const styles = StyleSheet.create({
     },
     container: {
         flexGrow: 1,
-        justifyContent: 'center',
+        justifyContent: 'flex-start',
         alignItems: 'center',
         padding: 21,
         backgroundColor: '#0D1B2A',
     },
+    headerImage: {
+        width: '50%',
+        height: 75,
+        resizeMode: 'contain',
+        marginBottom: 20,
+        alignSelf: 'center',
+    },
     sectionTitle: {
-        fontSize: 30,
+        fontSize: 24,
         fontWeight: 'bold',
         color: '#fff',
         marginBottom: 15,
         textAlign: 'left',
-        width: '100%',
+        width: '100%', // Ensures the text stays within the available width
+        maxWidth: '100%', // Prevents overflow
     },
     gridContainer: {
         flexDirection: 'row',
@@ -115,7 +126,7 @@ const styles = StyleSheet.create({
         padding: 30,
         marginBottom: 20,
         borderRadius: 10,
-        alignItems: 'left',
+        alignItems: 'flex-start',
         justifyContent: 'center',
         position: 'relative',
     },
@@ -146,7 +157,6 @@ const styles = StyleSheet.create({
     },
     button: {
         flexDirection: 'row',
-        color: '#A5D6A7',
         alignItems: 'center',
         paddingVertical: 15,
         borderRadius: 15,
@@ -162,12 +172,9 @@ const styles = StyleSheet.create({
     emptyButton: {
         backgroundColor: '#A5D6A7',
     },
-    icon: {
-        marginRight: 10,
-    },
     emptyButtonText: {
         fontSize: 18,
-        color: 'black',
+        color: 'white',
         fontWeight: 'bold',
     },
 });

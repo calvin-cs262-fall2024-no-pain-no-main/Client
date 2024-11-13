@@ -44,7 +44,7 @@ const Login = () => {
 
   return (
     <View style={styles.container}>
-      
+      <Image source={require('../assets/images/VigilFullLogo.png')} style={styles.titleImage} resizeMode='contain'/>
 
       <TouchableOpacity style={styles.adminButton} onPress={handleAdmin}>
         <Text style={styles.adminText}>Admin</Text>
