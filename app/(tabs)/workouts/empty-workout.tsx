@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, SafeAreaView, Text, TextInput, Modal, FlatList, TouchableOpacity, StyleSheet, ScrollView, Image } from 'react-native';
 import { CheckBox } from 'react-native-elements';
 import Icon from 'react-native-vector-icons/FontAwesome5';
+import axios from 'axios';
+
 const headerImage = require('../../../assets/images/VigilWeight.png');
 
 interface Exercise {
-    id: string;
+    id: number;
+    description: string;
     name: string;
-    muscle: string;
+    musclegroup: string;
     sets: Set[];
 }
 
@@ -31,90 +34,29 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
     const [isMuscleGroupModalVisible, setMuscleGroupModalVisible] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<string | null>(null);
+    const [availableExercises, setAvailableExercises] = useState<Exercise[]>([]);
 
-    const toggleTimer = (exerciseIndex: number, setIndex: number) => {
-        const newExercises = [...exercises];
-        const currentSet = newExercises[exerciseIndex].sets[setIndex];
+    useEffect(() => {
+        const fetchExercises = async () => {
+            try {
+                const { data } = await axios.get('https://no-pain-no-main.azurewebsites.net/exercises');
+                const exercisesWithSets = data.map((exercise: any) => ({
+                    ...exercise,
+                    sets: [{ set: 1, lbs: 0, reps: 0, completed: false, restTime: 120, timer: 120, timerActive: false }],
+                }));
+                setAvailableExercises(exercisesWithSets);
+            } catch (error) {
+                console.error('Error fetching exercises:', error);
+            }
+        };
+        fetchExercises();
+    }, []);
 
-        if (currentSet.timerActive) {
-            clearInterval(currentSet.timerInterval);  // Stop the timer
-            currentSet.timerActive = false;
-        } else {
-            currentSet.timerActive = true;
-            currentSet.timerInterval = setInterval(() => {
-                const newTime = currentSet.timer - 1;
-                if (newTime <= 0) {
-                    clearInterval(currentSet.timerInterval);
-                    currentSet.timerActive = false;
-                    currentSet.timer = 0;
-                } else {
-                    currentSet.timer = newTime;
-                }
-                setExercises([...newExercises]);
-            }, 1000);  // Update every second
-        }
-    };
+    const muscleGroups = Array.from(new Set(exercises.map(ex => ex.musclegroup)));
 
-    // Default exercise options
-    const exerciseOptions = [
-        { id: '1', name: 'Bench Press', muscle: 'Chest' },
-        { id: '2', name: 'Squats', muscle: 'Legs' },
-        { id: '3', name: 'Deadlift', muscle: 'Back' },
-        { id: '4', name: 'Incline Bench Press', muscle: 'Chest' },
-        { id: '5', name: 'Dumbbell Fly', muscle: 'Chest' },
-        { id: '6', name: 'Leg Press', muscle: 'Legs' },
-        { id: '7', name: 'Lunges', muscle: 'Legs' },
-        { id: '8', name: 'Leg Curl', muscle: 'Legs' },
-        { id: '9', name: 'Leg Extension', muscle: 'Legs' },
-        { id: '10', name: 'Pull-Up', muscle: 'Back' },
-        { id: '11', name: 'Lat Pulldown', muscle: 'Back' },
-        { id: '12', name: 'Seated Row', muscle: 'Back' },
-        { id: '13', name: 'Barbell Row', muscle: 'Back' },
-        { id: '14', name: 'T-Bar Row', muscle: 'Back' },
-        { id: '15', name: 'Overhead Press', muscle: 'Shoulders' },
-        { id: '16', name: 'Dumbbell Shoulder Press', muscle: 'Shoulders' },
-        { id: '17', name: 'Lateral Raise', muscle: 'Shoulders' },
-        { id: '18', name: 'Front Raise', muscle: 'Shoulders' },
-        { id: '19', name: 'Face Pull', muscle: 'Shoulders' },
-        { id: '20', name: 'Bicep Curl', muscle: 'Biceps' },
-        { id: '21', name: 'Hammer Curl', muscle: 'Biceps' },
-        { id: '22', name: 'Preacher Curl', muscle: 'Biceps' },
-        { id: '23', name: 'Concentration Curl', muscle: 'Biceps' },
-        { id: '24', name: 'Tricep Pushdown', muscle: 'Triceps' },
-        { id: '25', name: 'Tricep Extension', muscle: 'Triceps' },
-        { id: '26', name: 'Skull Crusher', muscle: 'Triceps' },
-        { id: '27', name: 'Dips', muscle: 'Triceps' },
-        { id: '28', name: 'Chest Dip', muscle: 'Chest' },
-        { id: '29', name: 'Calf Raise', muscle: 'Calves' },
-        { id: '30', name: 'Seated Calf Raise', muscle: 'Calves' },
-        { id: '31', name: 'Crunch', muscle: 'Abs' },
-        { id: '32', name: 'Plank', muscle: 'Abs' },
-        { id: '33', name: 'Russian Twist', muscle: 'Abs' },
-        { id: '34', name: 'Bicycle Crunch', muscle: 'Abs' },
-        { id: '35', name: 'Leg Raise', muscle: 'Abs' },
-        { id: '36', name: 'Hanging Leg Raise', muscle: 'Abs' },
-        { id: '37', name: 'Hip Thrust', muscle: 'Glutes' },
-        { id: '38', name: 'Glute Bridge', muscle: 'Glutes' },
-        { id: '39', name: 'Step-Up', muscle: 'Legs' },
-        { id: '40', name: 'Bulgarian Split Squat', muscle: 'Legs' },
-        { id: '41', name: 'Good Morning', muscle: 'Back' },
-        { id: '42', name: 'Cable Row', muscle: 'Back' },
-        { id: '43', name: 'Chest Fly', muscle: 'Chest' },
-        { id: '44', name: 'Pec Deck', muscle: 'Chest' },
-        { id: '45', name: 'High Row', muscle: 'Back' },
-        { id: '46', name: 'Farmers Walk', muscle: 'Full Body' },
-        { id: '47', name: 'Push-Up', muscle: 'Chest' },
-        { id: '48', name: 'Reverse Fly', muscle: 'Shoulders' },
-        { id: '49', name: 'Cable Lateral Raise', muscle: 'Shoulders' },
-        { id: '50', name: 'Rear Delt Row', muscle: 'Shoulders' },
-        { id: '51', name: 'The Zach', muscle: 'Forearms' },
-    ];
-
-    const muscleGroups = Array.from(new Set(exerciseOptions.map(ex => ex.muscle)));
-
-    const filteredExercises = exerciseOptions.filter(exercise => {
+    const filteredExercises = exercises.filter(exercise => {
         const matchesSearch = exercise.name.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesMuscleGroup = selectedMuscleGroup ? exercise.muscle === selectedMuscleGroup : true;
+        const matchesMuscleGroup = selectedMuscleGroup ? exercise.musclegroup === selectedMuscleGroup : true;
         return matchesSearch && matchesMuscleGroup;
     });
 
@@ -152,121 +94,124 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
     return (
         <SafeAreaView style={styles.safeAreaContainer}>
             <ScrollView style={styles.container}>
-                {/* Top Icon Placeholder */}
                 <View style={styles.topIconContainer}>
                     <Image source={headerImage} style={styles.headerImage} />
                 </View>
-
-                {/* Divider Line */}
                 <View style={styles.divider} />
-
                 {exercises.map((exercise, exerciseIndex) => (
                     <View key={exercise.id} style={styles.exerciseContainer}>
                         <Text style={styles.exerciseTitle}>{exercise.name.toUpperCase()}</Text>
-                        <Text style={styles.exerciseSubtitle}>{exercise.muscle.toUpperCase()}</Text>
+                        <Text style={styles.exerciseSubtitle}>{exercise.musclegroup.toUpperCase()}</Text>
                         <View style={styles.headerRow}>
-                            <Text style={[styles.columnHeader, { flex: 1 }]}>Set</Text>
-                            <Text style={[styles.columnHeader, { flex: 2 }]}>Lbs</Text>
-                            <Text style={[styles.columnHeader, { flex: 2 }]}>Reps</Text>
-                            <Text style={[styles.columnHeader, { flex: 1 }]}>✓</Text>
+                            <Text style={styles.columnHeader}>Set</Text>
+                            <Text style={styles.columnHeader}>Lbs</Text>
+                            <Text style={styles.columnHeader}>Reps</Text>
+                            <Text style={styles.columnHeader}>✓</Text>
                         </View>
                         {exercise.sets.map((set, setIndex) => (
                             <View key={setIndex} style={styles.row}>
-                            <Text style={[styles.setNumber, { flex: 1 }]}>{set.set}</Text>
-                            <TextInput
-                                style={[styles.input, { flex: 2 }]}
-                                keyboardType="numeric"
-                                value={String(set.lbs)}
-                                onChangeText={(value) => updateSet(exerciseIndex, setIndex, 'lbs', Number(value))}
-                            />
-                            <TextInput
-                                style={[styles.input, { flex: 2 }]}
-                                keyboardType="numeric"
-                                value={String(set.reps)}
-                                onChangeText={(value) => updateSet(exerciseIndex, setIndex, 'reps', Number(value))}
-                            />
-                            <CheckBox
-                                checked={set.completed}
-                                onPress={() => updateSet(exerciseIndex, setIndex, 'completed', !set.completed)}
-                                containerStyle={[styles.checkbox, { flex: 1 }]}
-                                checkedColor="#A5D6A7"
-                                uncheckedColor="#666"
-                            />
-                        </View>
-                        
+                                <View style={styles.cell}>
+                                    <Text style={styles.cellText}>{set.set}</Text>
+                                </View>
+                                <View style={styles.cell}>
+                                    <TextInput
+                                        style={styles.input}
+                                        keyboardType="numeric"
+                                        value={String(set.lbs)}
+                                        onChangeText={(value) => updateSet(exerciseIndex, setIndex, 'lbs', Number(value))}
+                                    />
+                                </View>
+                                <View style={styles.cell}>
+                                    <TextInput
+                                        style={styles.input}
+                                        keyboardType="numeric"
+                                        value={String(set.reps)}
+                                        onChangeText={(value) => updateSet(exerciseIndex, setIndex, 'reps', Number(value))}
+                                    />
+                                </View>
+                                <View style={styles.cell}>
+                                    <CheckBox
+                                        checked={set.completed}
+                                        onPress={() => updateSet(exerciseIndex, setIndex, 'completed', !set.completed)}
+                                        containerStyle={styles.checkbox}
+                                        checkedColor="#A5D6A7"
+                                        uncheckedColor="#666"
+                                    />
+                                </View>
+                            </View>
                         ))}
+                        <TouchableOpacity onPress={() => addSet(exerciseIndex)} style={styles.addSetButton}>
+                            <Text style={styles.addSetButtonText}>Add Set</Text>
+                        </TouchableOpacity>
                     </View>
                 ))}
-
                 <TouchableOpacity onPress={() => setExerciseModalVisible(true)} style={styles.addExerciseButton}>
                     <Text style={styles.addExerciseText}>Add Exercise</Text>
                 </TouchableOpacity>
-
-                {/* Divider Line */}
                 <View style={styles.divider} />
-
-                {/* Exercise Selection Modal */}
-                <Modal visible={isExerciseModalVisible} animationType="slide">
-                    <View style={styles.modalContainer}>
-                        <Text style={styles.modalTitle}>Select Exercise</Text>
-                        <TextInput
-                            style={styles.searchBar}
-                            placeholder="Search Exercise"
-                            placeholderTextColor="#888"
-                            value={searchQuery}
-                            onChangeText={setSearchQuery}
-                        />
-                        <TouchableOpacity
-                            style={styles.filterButton}
-                            onPress={() => setMuscleGroupModalVisible(true)}
-                        >
-                            <Text style={styles.filterButtonText}>
-                                Muscle Group: {selectedMuscleGroup || 'All'}
-                            </Text>
-                        </TouchableOpacity>
-                        <FlatList
-                            data={filteredExercises}
-                            keyExtractor={(item) => item.id}
-                            renderItem={({ item }) => (
-                                <TouchableOpacity onPress={() => addExercise(item)} style={styles.modalItem}>
-                                    <Text style={styles.modalItemText}>{item.name} ({item.muscle})</Text>
-                                </TouchableOpacity>
-                            )}
-                        />
-
-                        <TouchableOpacity onPress={() => setExerciseModalVisible(false)} style={styles.modalCloseButton}>
-                            <Text style={styles.modalCloseButtonText}>Close</Text>
-                        </TouchableOpacity>
-                    </View>
-                </Modal>
-
-                {/* Muscle Group Modal */}
-                <Modal visible={isMuscleGroupModalVisible} animationType="slide">
-                    <View style={styles.modalContainer}>
-                        <Text style={styles.modalTitle}>Select Muscle Group</Text>
-                        <FlatList
-                            data={muscleGroups}
-                            keyExtractor={(item) => item}
-                            renderItem={({ item }) => (
-                                <TouchableOpacity onPress={() => handleMuscleGroupSelect(item)} style={styles.modalItem}>
-                                    <Text style={styles.modalItemText}>{item}</Text>
-                                </TouchableOpacity>
-                            )}
-                        />
-                        <TouchableOpacity onPress={() => setMuscleGroupModalVisible(false)} style={styles.modalCloseButton}>
-                            <Text style={styles.modalCloseButtonText}>Close</Text>
-                        </TouchableOpacity>
-                    </View>
-                </Modal>
+                <ExerciseModal
+                    isVisible={isExerciseModalVisible}
+                    onClose={() => setExerciseModalVisible(false)}
+                    availableExercises={availableExercises}
+                    addExercise={addExercise}
+                />
+                <MuscleGroupModal
+                    isVisible={isMuscleGroupModalVisible}
+                    onClose={() => setMuscleGroupModalVisible(false)}
+                    muscleGroups={muscleGroups}
+                    handleMuscleGroupSelect={handleMuscleGroupSelect}
+                />
             </ScrollView>
         </SafeAreaView>
     );
 };
 
+const ExerciseModal = ({ isVisible, onClose, availableExercises, addExercise }) => (
+    <Modal visible={isVisible} animationType="slide" transparent={true}>
+        <View style={styles.modalBackground}>
+            <View style={styles.modalContainer}>
+                <Text style={styles.modalTitle}>Select Exercise</Text>
+                <FlatList
+                    data={availableExercises}
+                    keyExtractor={(item) => item.id.toString()}
+                    renderItem={({ item }) => (
+                        <TouchableOpacity onPress={() => addExercise(item)} style={styles.modalItem}>
+                            <Text style={styles.modalItemText}>{item.name} ({item.musclegroup})</Text>
+                        </TouchableOpacity>
+                    )}
+                />
+                <TouchableOpacity onPress={onClose} style={styles.modalCloseButton}>
+                    <Text style={styles.modalCloseButtonText}>Close</Text>
+                </TouchableOpacity>
+            </View>
+        </View>
+    </Modal>
+);
+
+const MuscleGroupModal = ({ isVisible, onClose, muscleGroups, handleMuscleGroupSelect }) => (
+    <Modal visible={isVisible} animationType="slide" transparent={true}>
+        <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Select Muscle Group</Text>
+            <FlatList
+                data={muscleGroups}
+                keyExtractor={(item) => item}
+                renderItem={({ item }) => (
+                    <TouchableOpacity onPress={() => handleMuscleGroupSelect(item)} style={styles.modalItem}>
+                        <Text style={styles.modalItemText}>{item}</Text>
+                    </TouchableOpacity>
+                )}
+            />
+            <TouchableOpacity onPress={onClose} style={styles.modalCloseButton}>
+                <Text style={styles.modalCloseButtonText}>Close</Text>
+            </TouchableOpacity>
+        </View>
+    </Modal>
+);
+
 const styles = StyleSheet.create({
     safeAreaContainer: {
         flex: 1,
-        backgroundColor: '#0D1B2A',  // This ensures that the content doesn't overlap with device's notch or bottom area
+        backgroundColor: '#0D1B2A',
     },
     container: {
         flex: 1,
@@ -308,20 +253,35 @@ const styles = StyleSheet.create({
     headerRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingBottom: 5,
+        justifyContent: 'space-around',
+        paddingVertical: 5,
         borderBottomColor: '#A5D6A7',
         borderBottomWidth: 1,
+    },
+    cell: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    cellText: {
+        color: '#FFF',
+        fontWeight: 'bold',
+        textAlign: 'center',
     },
     row: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
+        justifyContent: 'space-around',
+        paddingVertical: 5,
         marginVertical: 5,
+        borderBottomColor: '#444',
+        borderBottomWidth: 1,
     },
     columnHeader: {
+        flex: 1,
+        textAlign: 'center',
         color: '#A5D6A7',
         fontWeight: 'bold',
-        textAlign: 'center',
     },
     setNumber: {
         color: '#FFF',
@@ -333,17 +293,21 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         borderRadius: 8,
         paddingVertical: 5,
+        paddingHorizontal: 10,
         fontSize: 14,
         fontWeight: 'bold',
         borderColor: '#324A5F',
         borderWidth: 1,
         textAlign: 'center',
+        width: '80%',
     },
     checkbox: {
-        justifyContent: 'center',
-        alignItems: 'center',
         backgroundColor: 'transparent',
-    },    
+        padding: 0,
+        margin: 0,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
     addExerciseButton: {
         backgroundColor: '#A5D6A7',
         padding: 12,
@@ -364,10 +328,23 @@ const styles = StyleSheet.create({
         paddingBottom: 20,
         opacity: 0.5,
     },
-    modalContainer: {
+    modalBackground: {
         flex: 1,
-        padding: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContainer: {
+        width: '90%',
+        height: '80%',
         backgroundColor: '#0D1B2A',
+        borderRadius: 12,
+        padding: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 5,
     },
     modalTitle: {
         fontSize: 18,
@@ -413,6 +390,17 @@ const styles = StyleSheet.create({
         color: '#A5D6A7',
         fontWeight: 'bold',
         fontSize: 16,
+    },
+    addSetButton: {
+        marginTop: 10,
+        padding: 10,
+        backgroundColor: '#A5D6A7',
+        borderRadius: 8,
+    },
+    addSetButtonText: {
+        color: '#0D1B2A',
+        fontWeight: 'bold',
+        textAlign: 'center',
     },
 });
 
