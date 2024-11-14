@@ -31,10 +31,9 @@ interface ExerciseAppProps {
 const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
     const [exercises, setExercises] = useState<Exercise[]>(initialExercises);
     const [isExerciseModalVisible, setExerciseModalVisible] = useState(false);
-    const [isMuscleGroupModalVisible, setMuscleGroupModalVisible] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<string | null>(null);
     const [availableExercises, setAvailableExercises] = useState<Exercise[]>([]);
+    const [muscleGroups, setMuscleGroups] = useState<string[]>([]);
+    const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchExercises = async () => {
@@ -45,25 +44,16 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
                     sets: [{ set: 1, lbs: 0, reps: 0, completed: false, restTime: 120, timer: 120, timerActive: false }],
                 }));
                 setAvailableExercises(exercisesWithSets);
+
+                // Derive unique muscle groups
+                const uniqueMuscleGroups = Array.from(new Set(exercisesWithSets.map((ex) => ex.musclegroup)));
+                setMuscleGroups(uniqueMuscleGroups);
             } catch (error) {
                 console.error('Error fetching exercises:', error);
             }
         };
         fetchExercises();
     }, []);
-
-    const muscleGroups = Array.from(new Set(exercises.map(ex => ex.musclegroup)));
-
-    const filteredExercises = exercises.filter(exercise => {
-        const matchesSearch = exercise.name.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesMuscleGroup = selectedMuscleGroup ? exercise.musclegroup === selectedMuscleGroup : true;
-        return matchesSearch && matchesMuscleGroup;
-    });
-
-    const handleMuscleGroupSelect = (muscle: string) => {
-        setSelectedMuscleGroup(muscle);
-        setMuscleGroupModalVisible(false);
-    };
 
     const addExercise = (exercise: Omit<Exercise, 'sets'>) => {
         if (exercises.some(e => e.id === exercise.id)) {
@@ -89,6 +79,9 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
         const updatedExercises = [...exercises];
         updatedExercises[exerciseIndex].sets[setIndex][field] = value;
         setExercises(updatedExercises);
+    };
+    const handleMuscleGroupSelect = (muscle: string) => {
+        setSelectedMuscleGroup(muscle);
     };
 
     return (
@@ -154,10 +147,6 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
                     onClose={() => setExerciseModalVisible(false)}
                     availableExercises={availableExercises}
                     addExercise={addExercise}
-                />
-                <MuscleGroupModal
-                    isVisible={isMuscleGroupModalVisible}
-                    onClose={() => setMuscleGroupModalVisible(false)}
                     muscleGroups={muscleGroups}
                     handleMuscleGroupSelect={handleMuscleGroupSelect}
                 />
@@ -166,47 +155,117 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
     );
 };
 
-const ExerciseModal = ({ isVisible, onClose, availableExercises, addExercise }) => (
-    <Modal visible={isVisible} animationType="slide" transparent={true}>
-        <View style={styles.modalBackground}>
-            <View style={styles.modalContainer}>
-                <Text style={styles.modalTitle}>Select Exercise</Text>
-                <FlatList
-                    data={availableExercises}
-                    keyExtractor={(item) => item.id.toString()}
-                    renderItem={({ item }) => (
-                        <TouchableOpacity onPress={() => addExercise(item)} style={styles.modalItem}>
-                            <Text style={styles.modalItemText}>{item.name} ({item.musclegroup})</Text>
-                        </TouchableOpacity>
-                    )}
-                />
-                <TouchableOpacity onPress={onClose} style={styles.modalCloseButton}>
-                    <Text style={styles.modalCloseButtonText}>Close</Text>
-                </TouchableOpacity>
-            </View>
-        </View>
-    </Modal>
-);
+const ExerciseModal = ({
+    isVisible,
+    onClose,
+    availableExercises,
+    addExercise,
+    muscleGroups,
+    handleMuscleGroupSelect,
+}) => {
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isFilterModalVisible, setFilterModalVisible] = useState(false);
+    const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<string | null>(null);
 
-const MuscleGroupModal = ({ isVisible, onClose, muscleGroups, handleMuscleGroupSelect }) => (
-    <Modal visible={isVisible} animationType="slide" transparent={true}>
-        <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Select Muscle Group</Text>
-            <FlatList
-                data={muscleGroups}
-                keyExtractor={(item) => item}
-                renderItem={({ item }) => (
-                    <TouchableOpacity onPress={() => handleMuscleGroupSelect(item)} style={styles.modalItem}>
-                        <Text style={styles.modalItemText}>{item}</Text>
+    // Filter exercises based on the search query and selected muscle group
+    const filteredExercises = availableExercises.filter((exercise) => {
+        const matchesSearch = exercise.name.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesMuscleGroup = selectedMuscleGroup
+            ? exercise.musclegroup === selectedMuscleGroup
+            : true;
+        return matchesSearch && matchesMuscleGroup;
+    });
+
+    // Handle muscle group selection and close the filter modal
+    const onMuscleGroupSelect = (muscleGroup: string) => {
+        setSelectedMuscleGroup(muscleGroup);
+        setFilterModalVisible(false);
+    };
+
+    // Reset the filter when the modal is closed
+    useEffect(() => {
+        if (!isVisible) {
+            setSelectedMuscleGroup(null);
+        }
+    }, [isVisible]);
+
+    return (
+        <Modal visible={isVisible} animationType="slide" transparent={true}>
+            <View style={styles.modalBackground}>
+                <View style={styles.modalContainer}>
+                    <Text style={styles.modalTitle}>Select Exercise</Text>
+
+                    {/* Search Bar */}
+                    <View style={styles.searchBarContainer}>
+                        <Icon name="search" size={16} color="#A5D6A7" style={styles.searchIcon} />
+                        <TextInput
+                            style={styles.searchBar}
+                            placeholder="Search"
+                            placeholderTextColor="#A5D6A7"
+                            value={searchQuery}
+                            onChangeText={setSearchQuery}
+                        />
+                    </View>
+
+                    {/* Filter Button */}
+                    <TouchableOpacity
+                        style={styles.filterButton}
+                        onPress={() => setFilterModalVisible(true)}
+                    >
+                        <Text style={styles.filterButtonText}>
+                            {selectedMuscleGroup ? `Filter: ${selectedMuscleGroup}` : 'Filter by Muscle Group'}
+                        </Text>
                     </TouchableOpacity>
-                )}
-            />
-            <TouchableOpacity onPress={onClose} style={styles.modalCloseButton}>
-                <Text style={styles.modalCloseButtonText}>Close</Text>
-            </TouchableOpacity>
-        </View>
-    </Modal>
-);
+
+                    {/* Exercise List */}
+                    <FlatList
+                        data={filteredExercises}
+                        keyExtractor={(item) => item.id.toString()}
+                        renderItem={({ item }) => (
+                            <TouchableOpacity onPress={() => addExercise(item)} style={styles.modalItem}>
+                                <Text style={styles.modalItemText}>
+                                    {item.name} ({item.musclegroup})
+                                </Text>
+                            </TouchableOpacity>
+                        )}
+                        ListEmptyComponent={<Text style={styles.noResultsText}>No exercises found</Text>}
+                    />
+
+                    <TouchableOpacity onPress={onClose} style={styles.modalCloseButton}>
+                        <Text style={styles.modalCloseButtonText}>Close</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+
+            {/* Muscle Group Filter Modal */}
+            <Modal visible={isFilterModalVisible} animationType="slide" transparent={true}>
+                <View style={styles.modalBackground}>
+                    <View style={styles.modalContainer}>
+                        <Text style={styles.modalTitle}>Select Muscle Group</Text>
+                        <FlatList
+                            data={muscleGroups}
+                            keyExtractor={(item) => item}
+                            renderItem={({ item }) => (
+                                <TouchableOpacity
+                                    onPress={() => onMuscleGroupSelect(item)}
+                                    style={styles.modalItem}
+                                >
+                                    <Text style={styles.modalItemText}>{item}</Text>
+                                </TouchableOpacity>
+                            )}
+                        />
+                        <TouchableOpacity
+                            onPress={() => setFilterModalVisible(false)}
+                            style={styles.modalCloseButton}
+                        >
+                            <Text style={styles.modalCloseButtonText}>Close</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+        </Modal>
+    );
+};
 
 const styles = StyleSheet.create({
     safeAreaContainer: {
@@ -245,6 +304,10 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#A5D6A7',
     },
+    noResultsText: {
+        color: '#A5D6A7',
+        textAlign : 'center',
+    },
     exerciseSubtitle: {
         fontSize: 16,
         color: '#A5D6A7',
@@ -262,6 +325,27 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
+    },
+    searchBarContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#1F2A38',
+        borderColor: '#A5D6A7',
+        borderWidth: 1,
+        borderRadius: 8,
+        paddingHorizontal: 10,
+        marginBottom: 15,
+        width: '100%',
+        height: 35,
+    },
+    searchIcon: {
+        marginRight: 8,
+    },
+    searchBar: {
+        flex: 1,
+        color: '#FFF',
+        fontSize: 16,
+        padding: 0,
     },
     cellText: {
         color: '#FFF',
@@ -368,28 +452,8 @@ const styles = StyleSheet.create({
         marginTop: 20,
     },
     modalCloseButtonText: {
-        color: '#0D1B2A',
+        color: 'white',
         fontWeight: 'bold',
-    },
-    searchBar: {
-        backgroundColor: '#1F2A38',
-        borderRadius: 8,
-        padding: 10,
-        color: '#FFF',
-        marginBottom: 15,
-        fontSize: 16,
-    },
-    filterButton: {
-        backgroundColor: '#324A5F',
-        padding: 10,
-        borderRadius: 8,
-        alignItems: 'center',
-        marginBottom: 15,
-    },
-    filterButtonText: {
-        color: '#A5D6A7',
-        fontWeight: 'bold',
-        fontSize: 16,
     },
     addSetButton: {
         marginTop: 10,
@@ -398,9 +462,23 @@ const styles = StyleSheet.create({
         borderRadius: 8,
     },
     addSetButtonText: {
-        color: '#0D1B2A',
+        color: 'white',
         fontWeight: 'bold',
         textAlign: 'center',
+    },
+    filterButton: {
+        backgroundColor: '#324A5F',
+        padding: 12,
+        borderRadius: 8,
+        alignItems: 'center',
+        marginBottom: 15,
+        width: '80%',
+        alignSelf: 'center',
+    },
+    filterButtonText: {
+        color: '#A5D6A7',
+        fontWeight: 'bold',
+        fontSize: 16,
     },
 });
 
