@@ -3,6 +3,8 @@ import { StyleSheet, View, Text, TouchableOpacity, ScrollView, SafeAreaView } fr
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useRouter } from "expo-router";
+import { globalStyles } from '@/assets/styles/globalStyles';
+import { theme } from '@/assets/styles/theme';
 
 export default function Profile() {
   const router = useRouter();
@@ -72,14 +74,13 @@ export default function Profile() {
 
 const styles = StyleSheet.create({
   safeArea: {
-    flex: 1,
-    backgroundColor: '#0D1B2A',  // Safe area background color to avoid overlap
+		...globalStyles.safeAreaContainer,
   },
   container: {
     flex: 1,
     paddingTop: 40,  // Added top padding to avoid the iPhone notch area
     paddingHorizontal: 20,
-    backgroundColor: '#0D1B2A',  // Set background color here
+    backgroundColor: 'black',  // Set background color here
   },
   scrollContainer: {
     paddingBottom: 20,
@@ -88,10 +89,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 20,
-    backgroundColor: '#1C2A36',  // Slight contrast to differentiate profile section
+		backgroundColor: theme.colors.cardBackground,  // Slight contrast to differentiate profile section
     borderRadius: 12,
     marginBottom: 20,
-    shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 5,
@@ -109,13 +109,14 @@ const styles = StyleSheet.create({
     color: '#bbb',
   },
   settingsContainer: {
-    backgroundColor: '#2C3E50',  // Darker background color for settings
+		backgroundColor: theme.colors.cardBackground, // Darker background color for settings
     padding: 20,
     borderRadius: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
     elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
   sectionTitle: {
     fontSize: 24,

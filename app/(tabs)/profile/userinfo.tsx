@@ -1,18 +1,16 @@
 import { StyleSheet, Text, View, Button, Alert } from 'react-native'
 import React from 'react'
+import { globalStyles } from '@/assets/styles/globalStyles';
 
-import { useNavigation } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 
 const UserInfo = () => {
-    // Handle Log Out action
-    const handleLogOut = () => {
-        const navigation = useNavigation();
-        // Add logic for logging out the user, for example:
-        // Clerk.logout(); or some other method from your authentication provider
-        Alert.alert("Logged Out", "You have been logged out.");
-        // Redirect to login screen (if needed)
-        navigation.navigate('Login');  // You can modify this based on your navigation structure
+    const router = useRouter();
+
+    const handlelogout = () => {
+        router.push('/'); // Adjust to your desired route
     };
+
 
     // Handle Terminate Account action
     const handleTerminateAccount = () => {
@@ -22,7 +20,7 @@ const UserInfo = () => {
             [
                 { text: "Cancel", style: "cancel" },
                 {
-                    text: "Delete", 
+                    text: "Delete",
                     onPress: () => {
                         // Add logic to terminate the account here (e.g., API call)
                         Alert.alert("Account Deleted", "Your account has been permanently deleted.");
@@ -39,7 +37,7 @@ const UserInfo = () => {
             <Text style={styles.title}>Login Information</Text>
 
             {/* Log Out Button */}
-            <Button title="Log Out" onPress={handleLogOut} color="red" />
+            <Button title="Log Out" onPress={handlelogout} color="red" />
 
             {/* Terminate Account Button */}
             <Button title="Terminate Account" onPress={handleTerminateAccount} color="red" />
@@ -52,11 +50,7 @@ export default UserInfo;
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 20,
-        backgroundColor: '#0D1B2A',
+        ...globalStyles.container,
     },
     title: {
         fontSize: 24,

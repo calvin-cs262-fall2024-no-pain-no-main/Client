@@ -5,6 +5,8 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { globalStyles } from "../../../assets/styles/globalStyles";
 import { theme } from "../../../assets/styles/theme";
 import axios from "axios";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 const headerImage = require("../../../assets/images/VigilWeight.png");
 
@@ -12,38 +14,50 @@ const Workouts = () => {
 	async function startPredefinedWorkout(workoutId: number) {
 		try {
 			const response = await axios.get(`https://no-pain-no-main.azurewebsites.net/workout${workoutId}/exerciseData`);
+
 			const exercises = response.data.map((exercise: any) => ({
-				id: exercise.exerciseid,
+				id: exercise.exerciseid,  // Ensure you're using the correct field
 				name: exercise.name,
 				description: exercise.description,
 				musclegroup: exercise.musclegroup,
+
+				// Ensure that sets are generated correctly and properly handled
 				sets: Array.from({ length: exercise.sets }).map((_, index) => ({
 					set: index + 1,
 					lbs: 0,
 					reps: exercise.reps,
 					completed: false,
-					restTime: exercise.resttime,
+					restTime: exercise.resttime,  // Make sure the `resttime` is a number (no need for .toString())
 				})),
 			}));
+
+			// Log the exercises to verify the result
+			console.log(JSON.stringify(exercises, null, 2)); // This will give you a more readable output
+
 			// Navigate to the empty-workout page with the predefined exercises
+			await AsyncStorage.setItem('exercises', JSON.stringify(exercises));
 			router.push({
 				pathname: "../workouts/empty-workout",
-				params: { initialExercises: JSON.stringify(exercises) },
+				// params: { initialExercises: exercises },
 			});
+
 		} catch (error) {
 			console.error("Error fetching predefined workout exercises:", error);
 			alert("Failed to load exercises. Please try again.");
 		}
 	}
 
+
+
 	const router = useRouter();
 
 	const [workouts, setWorkouts] = React.useState([
-		{ id: 1, name: "Workout 1" },
-		{ id: 2, name: "Workout 2" },
+		{ id: 1, name: "Nov 14 leg" },
+		{ id: 2, name: "demon back day" },
 	]);
 
 	async function startEmptyWorkout() {
+		await AsyncStorage.removeItem('exercises');
 		router.push("../workouts/empty-workout");
 	}
 
