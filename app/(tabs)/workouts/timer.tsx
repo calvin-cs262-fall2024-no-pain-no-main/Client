@@ -24,7 +24,7 @@ const TimerPage: React.FC = () => {
 		const updateTimer = (timestamp: number) => {
 			if (!startTime) startTime = timestamp;
 			const elapsedTime = (timestamp - startTime) / 1000;
-			const remainingTime = Math.max(90 - elapsedTime, 0);
+			const remainingTime = Math.max(45 - elapsedTime, 0);
 			setTimer(remainingTime);
 
 			if (remainingTime > 0) {
@@ -55,7 +55,7 @@ const TimerPage: React.FC = () => {
 	};
 
 	// Calculate progress for the custom progress bar (0 to 1)
-	const progress = timer / 90;
+	const progress = timer / 45;
 
 	return (
 		<View style={styles.container}>
