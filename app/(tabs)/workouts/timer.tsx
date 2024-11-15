@@ -6,7 +6,7 @@ import { theme } from "../../../assets/styles/theme";
 
 const TimerPage: React.FC = () => {
 	const router = useRouter();
-	const [timer, setTimer] = useState(90); // 90 seconds countdown
+	const [timer, setTimer] = useState(45); // 90 seconds countdown
 	const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
 	const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
 	const [correctAnswerShown, setCorrectAnswerShown] = useState(false);
