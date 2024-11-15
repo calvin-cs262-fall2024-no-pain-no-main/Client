@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons'; // For icons
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import { globalStyles} from '../assets/styles/globalStyles';
+import { theme } from '@/assets/styles/theme';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -94,55 +95,41 @@ const Login = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: 16,
-    backgroundColor: '#0D1B2A',
+    ...globalStyles.container,
   },
   titleImage: {
-    width: '90%',
-    height : '20%',
-    alignSelf: 'center',
-    marginBottom: 100,
+    ...globalStyles.headerImage,
+    width: '95%',
+    height: '20%',
+    marginBottom: theme.spacing.xxLarge,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderBottomColor: 'white',
     borderBottomWidth: 1,
-    marginBottom: 20,
-    marginHorizontal: 40, // Add margin to center the input fields more
+    marginBottom: theme.spacing.small,
+    marginHorizontal: theme.spacing.large,
   },
   icon: {
-    marginRight: 0,
+    marginRight: theme.spacing.small,
   },
   input: {
-    height: 40,
+    ...globalStyles.input,
     flex: 1,
-    paddingHorizontal: 8,
-    fontFamily: 'SpaceMono',
-    color: 'white',
+    paddingHorizontal: theme.spacing.small,
+    color: theme.colors.textPrimary,
   },
   signInButton: {
-    backgroundColor: '#0E2A2B', // Dark green background color
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    borderRadius: 10, // Rounded corners
-    alignItems: 'center',
-    marginBottom: 12,
-    marginHorizontal: 40,
+    ...globalStyles.button,
+    backgroundColor: theme.colors.buttonBackground,
+    borderColor: theme.colors.border,
     borderWidth: 1.5,
-    borderColor: '#A5D6A7', // Light green border color
-    shadowColor: '#A5D6A7', // Glow effect color
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 6,
-    elevation: 5, // For Android shadow effect
+    shadowColor: 'black',
   },
   signInText: {
-    color: '#A5D6A7', // Light green text color
-    fontSize: 16,
-    fontWeight: '600',
+    ...globalStyles.buttonText,
+    color: theme.colors.textSecondary,
+
   },
   signUpContainer: {
     flexDirection: 'row',
@@ -150,25 +137,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   signUpText: {
-    color: 'white',
-    fontSize: 16,
+    color: theme.colors.textPrimary,
+    fontSize: theme.fonts.regular,
   },
   signUpLink: {
-    color: '#A5D6A7',
-    fontSize: 16,
+    color: theme.colors.primary,
+    fontSize: theme.fonts.regular,
     textDecorationLine: 'underline',
   },
   adminButton: {
     position: 'absolute',
-    bottom: 20,
-    left: 20,
-    backgroundColor: '#f0f0f0',
-    padding: 8,
-    borderRadius: 5,
+    bottom: theme.spacing.medium,
+    left: theme.spacing.medium,
+    backgroundColor: theme.colors.modalBackground,
+    padding: theme.spacing.small,
+    borderRadius: theme.borderRadius.small,
   },
   adminText: {
-    color: '#333',
-    fontSize: 12,
+    color: theme.colors.textSecondary,
+    fontSize: theme.fonts.regular,
   },
 });
 
