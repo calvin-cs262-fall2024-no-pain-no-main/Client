@@ -70,21 +70,15 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
 	}, [params]);
 
 	const addExercise = (exercise: Exercise) => {
-		// Check if the exercise is already in the list to avoid duplicates
 		if (exercises.some((e) => e.id === exercise.id)) {
-			alert("Exercise already added");
+			alert("Duplicate Exercise. This exercise is already added.");
 			return;
 		}
 
-		// Use the existing 'sets' from the API response without overwriting
-		setExercises([
-			...exercises,
-			{
-				...exercise,
-				sets: exercise.sets, // Use the sets provided by the API
-			},
-		]);
-		console.log("Updated exercises state:", exercises); // Debug log
+		// Add exercise with its predefined sets
+		setExercises((prevExercises) => [...prevExercises, { ...exercise, sets: exercise.sets }]);
+
+		console.log("Updated exercises state:", exercises);
 		setExerciseModalVisible(false);
 	};
 
