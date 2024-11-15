@@ -59,7 +59,7 @@ export const globalStyles = StyleSheet.create({
     progressBarContainer: {
         width: '100%',
         height: 8,
-        backgroundColor: theme.colors.secondary,
+        backgroundColor: theme.colors.background,
         borderRadius: theme.borderRadius.small,
         overflow: 'hidden',
         marginBottom: theme.spacing.medium,

@@ -37,7 +37,6 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
 	const [availableExercises, setAvailableExercises] = useState<Exercise[]>([]);
 	const [muscleGroups, setMuscleGroups] = useState<string[]>([]);
 	const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<string | null>(null);
-	const params = useLocalSearchParams();
 
 	useEffect(() => {
 		const fetchInitialData = async () => {
@@ -47,6 +46,8 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
 					const parsedExercises = JSON.parse(exercisesData);
 					console.log("Fetched exercises:", parsedExercises);
 					setExercises(parsedExercises);
+
+					return; // Exit early if we have exercises in AsyncStorage
 				} else {
 					console.log("No exercises found in AsyncStorage");
 					const { data } = await axios.get("https://no-pain-no-main.azurewebsites.net/exercises");
@@ -55,21 +56,18 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
 						...exercise,
 						sets: [{ set: 1, lbs: 0, reps: 0, completed: false, restTime: 120 }],
 					}));
-
 					setAvailableExercises(exercisesWithSets);
-
-					// Store fetched exercises in AsyncStorage
-					await AsyncStorage.setItem('exercises', JSON.stringify(exercisesWithSets));
 
 					// Derive unique muscle groups
 					const uniqueMuscleGroups = Array.from(new Set(exercisesWithSets.map((ex) => ex.musclegroup)));
 					setMuscleGroups(uniqueMuscleGroups);
+					return;
 				}
+
 			} catch (error) {
 				console.error("Error fetching exercises from AsyncStorage:", error);
 			}
 		};
-	
 		fetchInitialData();
 	}, []);
 
@@ -113,21 +111,15 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
 	// }, [params]);
 
 	const addExercise = (exercise: Exercise) => {
-		// Check if the exercise is already in the list to avoid duplicates
 		if (exercises.some((e) => e.id === exercise.id)) {
-			alert("Exercise already added");
+			alert("Duplicate Exercise. This exercise is already added.");
 			return;
 		}
 
-		// Use the existing 'sets' from the API response without overwriting
-		setExercises([
-			...exercises,
-			{
-				...exercise,
-				sets: exercise.sets, // Use the sets provided by the API
-			},
-		]);
-		console.log("Updated exercises state:", exercises); // Debug log
+		// Add exercise with its predefined sets
+		setExercises((prevExercises) => [...prevExercises, { ...exercise, sets: exercise.sets }]);
+
+		console.log("Updated exercises state:", exercises);
 		setExerciseModalVisible(false);
 	};
 
@@ -558,7 +550,7 @@ const styles = StyleSheet.create({
 	saveExerciseText: {
 		flex: 1, // Ensures input takes up the available space
 		borderBottomWidth: 1,
-		borderColor: theme.colors.primary,
+		borderColor: theme.colors.border,
 		paddingVertical: theme.spacing.small,
 		paddingLeft: theme.spacing.small,
 		fontSize: 20,
@@ -566,7 +558,7 @@ const styles = StyleSheet.create({
 		height: 50, // Fixed height for input to prevent resizing on text change
 	},
 	saveButtonText: {
-		color: theme.colors.textLight, // Adjust text color
+		color: theme.colors.textPrimary, // Adjust text color
 		fontSize: theme.fonts.regular,
 		fontWeight: 'bold',
 

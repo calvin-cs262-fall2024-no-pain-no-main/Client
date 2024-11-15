@@ -13,8 +13,8 @@ export default function TabLayout() {
           backgroundColor: theme.colors.background, // Tab bar background color
           borderTopWidth: 0, // Remove the border between the screen and the tab bar
         },
-        tabBarActiveTintColor: "#A5D6A7", // Active tab icon color
-        tabBarInactiveTintColor: "#A5D6A7", // Inactive tab icon color
+        tabBarActiveTintColor: theme.colors.secondary, // Active tab icon color
+        tabBarInactiveTintColor: theme.colors.secondary, // Inactive tab icon color
       }}>
       <Tabs.Screen
         name="workouts"
