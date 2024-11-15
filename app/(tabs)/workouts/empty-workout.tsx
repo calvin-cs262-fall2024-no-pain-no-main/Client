@@ -3,9 +3,10 @@ import { View, SafeAreaView, Text, TextInput, Modal, FlatList, TouchableOpacity,
 import { CheckBox } from "react-native-elements";
 import Icon from "react-native-vector-icons/FontAwesome5";
 import axios from "axios";
-import { useRouter } from "expo-router";
-import { globalStyles } from '../../../assets/styles/globalStyles';
-import { theme } from '../../../assets/styles/theme';
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { globalStyles } from "../../../assets/styles/globalStyles";
+import { theme } from "../../../assets/styles/theme";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const headerImage = require("../../../assets/images/VigilWeight.png");
 
@@ -36,39 +37,97 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
 	const [availableExercises, setAvailableExercises] = useState<Exercise[]>([]);
 	const [muscleGroups, setMuscleGroups] = useState<string[]>([]);
 	const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<string | null>(null);
+	const params = useLocalSearchParams();
 
 	useEffect(() => {
-		const fetchExercises = async () => {
+		const fetchInitialData = async () => {
 			try {
-				const { data } = await axios.get("https://no-pain-no-main.azurewebsites.net/exercises");
-				const exercisesWithSets = data.map((exercise: any) => ({
-					...exercise,
-					sets: [{ set: 1, lbs: 0, reps: 0, completed: false, restTime: 120 }],
-				}));
-				setAvailableExercises(exercisesWithSets);
+				const exercisesData = await AsyncStorage.getItem('exercises');
+				if (exercisesData) {
+					const parsedExercises = JSON.parse(exercisesData);
+					console.log("Fetched exercises:", parsedExercises);
+					setExercises(parsedExercises);
+				} else {
+					console.log("No exercises found in AsyncStorage");
+					const { data } = await axios.get("https://no-pain-no-main.azurewebsites.net/exercises");
 
-				// Derive unique muscle groups
-				const uniqueMuscleGroups = Array.from(new Set(exercisesWithSets.map((ex) => ex.musclegroup)));
-				setMuscleGroups(uniqueMuscleGroups);
+					const exercisesWithSets = data.map((exercise: any) => ({
+						...exercise,
+						sets: [{ set: 1, lbs: 0, reps: 0, completed: false, restTime: 120 }],
+					}));
+
+					setAvailableExercises(exercisesWithSets);
+
+					// Store fetched exercises in AsyncStorage
+					await AsyncStorage.setItem('exercises', JSON.stringify(exercisesWithSets));
+
+					// Derive unique muscle groups
+					const uniqueMuscleGroups = Array.from(new Set(exercisesWithSets.map((ex) => ex.musclegroup)));
+					setMuscleGroups(uniqueMuscleGroups);
+				}
 			} catch (error) {
-				console.error("Error fetching exercises:", error);
+				console.error("Error fetching exercises from AsyncStorage:", error);
 			}
 		};
-		fetchExercises();
+	
+		fetchInitialData();
 	}, []);
 
-	const addExercise = (exercise: Omit<Exercise, "sets">) => {
+
+	// useEffect(() => {
+		
+	// 	const fetchInitialData = async () => {
+	// 		try {
+	// 			const exercisesData = await AsyncStorage.getItem('exercises');
+	// 			if (exercisesData) {
+	// 			  //setExercises(JSON.parse(exercisesData));
+	// 			};
+
+	// 			// if (initialExercisesParam) {
+	// 			// 	const parsedExercises = JSON.parse(initialExercisesParam as String);
+	// 			// 	if (Array.isArray(parsedExercises) && parsedExercises.length > 0) {
+	// 			// 		setExercises(parsedExercises);
+
+	// 			// 		return; // Exit early if we have initial exercises
+	// 			// 	}
+	// 			// }
+	// 			// // Fetch all exercises if no initial exercises are provided
+	// 			// const { data } = await axios.get("https://no-pain-no-main.azurewebsites.net/exercises");
+				
+	// 			// const exercisesWithSets = data.map((exercise: any) => ({
+	// 			// 	...exercise,
+	// 			// 	sets: [{ set: 1, lbs: 0, reps: 0, completed: false, restTime: 120 }],
+	// 			// }));
+
+	// 			setAvailableExercises(exercisesWithSets);
+
+	// 			// Derive unique muscle groups
+	// 			const uniqueMuscleGroups = Array.from(new Set(exercisesWithSets.map((ex) => ex.musclegroup)));
+	// 			setMuscleGroups(uniqueMuscleGroups);
+	// 		} catch (error) {
+	// 			console.error("Error fetching exercises:", error);
+	// 		}
+	// 	};
+
+	// 	fetchInitialData();
+	// }, [params]);
+
+	const addExercise = (exercise: Exercise) => {
+		// Check if the exercise is already in the list to avoid duplicates
 		if (exercises.some((e) => e.id === exercise.id)) {
 			alert("Exercise already added");
 			return;
 		}
+
+		// Use the existing 'sets' from the API response without overwriting
 		setExercises([
 			...exercises,
 			{
 				...exercise,
-				sets: [{ set: 1, lbs: 0, reps: 0, completed: false, restTime: 120 }],
+				sets: exercise.sets, // Use the sets provided by the API
 			},
 		]);
+		console.log("Updated exercises state:", exercises); // Debug log
 		setExerciseModalVisible(false);
 	};
 
@@ -102,6 +161,17 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
 				<View style={styles.topIconContainer}>
 					<Image source={headerImage} style={styles.headerImage} />
 				</View>
+				<View style={styles.inputWithButton}>
+					<TextInput
+						style={styles.saveExerciseText}
+						placeholder="Enter Workout Name"
+						placeholderTextColor={theme.colors.textSecondary}
+					/>
+					<TouchableOpacity style={styles.saveButton}>
+						<Text style={styles.saveButtonText}>Save</Text>
+					</TouchableOpacity>
+				</View>
+
 				<View style={styles.divider} />
 				{exercises.map((exercise, exerciseIndex) => (
 					<View key={exercise.id} style={styles.exerciseContainer}>
@@ -154,7 +224,7 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
 											}
 										}}
 										containerStyle={styles.checkbox}
-										checkedColor= {theme.colors.primary}
+										checkedColor={theme.colors.primary}
 										uncheckedColor="#666"
 									/>
 								</View>
@@ -215,8 +285,14 @@ const ExerciseModal = ({ isVisible, onClose, availableExercises, addExercise, mu
 
 					{/* Search Bar */}
 					<View style={styles.searchBarContainer}>
-						<Icon name="search" size={16} color= {theme.colors.primary} style={styles.searchIcon} />
-						<TextInput style={styles.searchBar} placeholder="Search" placeholderTextColor= {theme.colors.textPrimary} value={searchQuery} onChangeText={setSearchQuery} />
+						<Icon name="search" size={16} color={theme.colors.primary} style={styles.searchIcon} />
+						<TextInput
+							style={styles.searchBar}
+							placeholder="Search"
+							placeholderTextColor={theme.colors.textPrimary}
+							value={searchQuery}
+							onChangeText={setSearchQuery}
+						/>
 					</View>
 
 					{/* Filter Button */}
@@ -270,7 +346,7 @@ const ExerciseModal = ({ isVisible, onClose, availableExercises, addExercise, mu
 
 const styles = StyleSheet.create({
 	safeAreaContainer: {
-		...globalStyles.safeAreaContainer
+		...globalStyles.safeAreaContainer,
 	},
 	container: {
 		flex: 1,
@@ -463,6 +539,37 @@ const styles = StyleSheet.create({
 		color: theme.colors.textSecondary,
 		fontWeight: "bold",
 		fontSize: theme.fonts.regular,
+	},
+	inputWithButton: {
+		flexDirection: 'row', // Aligns input and button horizontally
+		alignItems: 'center', // Ensures vertical alignment
+		justifyContent: 'space-between', // Distributes space between input and button
+		marginBottom: theme.spacing.medium, // Adjust as needed
+		position: 'relative', // Ensures button is within the container but can stay fixed
+		width: '100%', // Ensures it takes full width
+	},
+	saveButton: {
+		marginLeft: 0, // Space between input and button
+		paddingVertical: theme.spacing.small,
+		paddingHorizontal: theme.spacing.medium,
+		backgroundColor: theme.colors.primary, // Adjust based on your theme
+		borderRadius: 5,
+	},
+	saveExerciseText: {
+		flex: 1, // Ensures input takes up the available space
+		borderBottomWidth: 1,
+		borderColor: theme.colors.primary,
+		paddingVertical: theme.spacing.small,
+		paddingLeft: theme.spacing.small,
+		fontSize: 20,
+		color: theme.colors.textPrimary,
+		height: 50, // Fixed height for input to prevent resizing on text change
+	},
+	saveButtonText: {
+		color: theme.colors.textLight, // Adjust text color
+		fontSize: theme.fonts.regular,
+		fontWeight: 'bold',
+
 	},
 });
 
