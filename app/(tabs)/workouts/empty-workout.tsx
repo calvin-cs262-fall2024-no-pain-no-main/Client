@@ -3,9 +3,9 @@ import { View, SafeAreaView, Text, TextInput, Modal, FlatList, TouchableOpacity,
 import { CheckBox } from "react-native-elements";
 import Icon from "react-native-vector-icons/FontAwesome5";
 import axios from "axios";
-import { useRouter } from "expo-router";
-import { globalStyles } from '../../../assets/styles/globalStyles';
-import { theme } from '../../../assets/styles/theme';
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { globalStyles } from "../../../assets/styles/globalStyles";
+import { theme } from "../../../assets/styles/theme";
 
 const headerImage = require("../../../assets/images/VigilWeight.png");
 
@@ -36,10 +36,21 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
 	const [availableExercises, setAvailableExercises] = useState<Exercise[]>([]);
 	const [muscleGroups, setMuscleGroups] = useState<string[]>([]);
 	const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<string | null>(null);
+	const params = useLocalSearchParams();
 
 	useEffect(() => {
-		const fetchExercises = async () => {
+		const fetchInitialData = async () => {
 			try {
+				// Check if there are initial exercises passed via navigation params
+				const initialExercisesParam = params?.initialExercises;
+				if (initialExercisesParam) {
+					const parsedExercises = JSON.parse(initialExercisesParam);
+					if (Array.isArray(parsedExercises) && parsedExercises.length > 0) {
+						setExercises(parsedExercises);
+						return; // Exit early if we have initial exercises
+					}
+				}
+				// Fetch all exercises if no initial exercises are provided
 				const { data } = await axios.get("https://no-pain-no-main.azurewebsites.net/exercises");
 				const exercisesWithSets = data.map((exercise: any) => ({
 					...exercise,
@@ -54,21 +65,26 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
 				console.error("Error fetching exercises:", error);
 			}
 		};
-		fetchExercises();
-	}, []);
 
-	const addExercise = (exercise: Omit<Exercise, "sets">) => {
+		fetchInitialData();
+	}, [params]);
+
+	const addExercise = (exercise: Exercise) => {
+		// Check if the exercise is already in the list to avoid duplicates
 		if (exercises.some((e) => e.id === exercise.id)) {
 			alert("Exercise already added");
 			return;
 		}
+
+		// Use the existing 'sets' from the API response without overwriting
 		setExercises([
 			...exercises,
 			{
 				...exercise,
-				sets: [{ set: 1, lbs: 0, reps: 0, completed: false, restTime: 120 }],
+				sets: exercise.sets, // Use the sets provided by the API
 			},
 		]);
+		console.log("Updated exercises state:", exercises); // Debug log
 		setExerciseModalVisible(false);
 	};
 
@@ -154,7 +170,7 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
 											}
 										}}
 										containerStyle={styles.checkbox}
-										checkedColor= {theme.colors.primary}
+										checkedColor={theme.colors.primary}
 										uncheckedColor="#666"
 									/>
 								</View>
@@ -215,8 +231,14 @@ const ExerciseModal = ({ isVisible, onClose, availableExercises, addExercise, mu
 
 					{/* Search Bar */}
 					<View style={styles.searchBarContainer}>
-						<Icon name="search" size={16} color= {theme.colors.primary} style={styles.searchIcon} />
-						<TextInput style={styles.searchBar} placeholder="Search" placeholderTextColor= {theme.colors.textPrimary} value={searchQuery} onChangeText={setSearchQuery} />
+						<Icon name="search" size={16} color={theme.colors.primary} style={styles.searchIcon} />
+						<TextInput
+							style={styles.searchBar}
+							placeholder="Search"
+							placeholderTextColor={theme.colors.textPrimary}
+							value={searchQuery}
+							onChangeText={setSearchQuery}
+						/>
 					</View>
 
 					{/* Filter Button */}
@@ -270,7 +292,7 @@ const ExerciseModal = ({ isVisible, onClose, availableExercises, addExercise, mu
 
 const styles = StyleSheet.create({
 	safeAreaContainer: {
-		...globalStyles.safeAreaContainer
+		...globalStyles.safeAreaContainer,
 	},
 	container: {
 		flex: 1,
