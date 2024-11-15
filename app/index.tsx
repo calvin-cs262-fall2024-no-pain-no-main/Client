@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, Image } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useFonts } from 'expo-font';
 import { Ionicons } from '@expo/vector-icons'; // For icons
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import { globalStyles} from '../assets/styles/globalStyles';
+import { theme } from '@/assets/styles/theme';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -43,25 +43,13 @@ const Login = () => {
     router.push('/(tabs)/workouts'); // Adjust to your desired route for admin
   };
 
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
-
-  if (!loaded) return null;
-
   return (
     <View style={styles.container}>
+      <Image source={require('../assets/images/VigilFullLogo.png')} style={styles.titleImage} resizeMode='contain'/>
+
       <TouchableOpacity style={styles.adminButton} onPress={handleAdmin}>
         <Text style={styles.adminText}>Admin</Text>
       </TouchableOpacity>
-
-      {/* Title and Dumbbell Icon */}
-      <View style={styles.titleContainer}>
-        <Icon name="dumbbell" size={70} color="#A5D6A7" style={styles.dumbbellIcon} />
-        <Text style={styles.title}>VIGIL</Text>
-      </View>
-
-      <Text style={styles.text}>Optimized rest and workout</Text>
 
       {/* Username Input */}
       <View style={styles.inputContainer}>
@@ -107,67 +95,41 @@ const Login = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: 16,
-    backgroundColor: '#0D1B2A',
+    ...globalStyles.container,
   },
-  text: {
-    fontSize: 20,
-    color: 'white',
-    fontFamily: 'SpaceMono',
-    textAlign: 'right',
-    marginBottom: 120, // Removed marginBottom
-    marginTop: 0, // Ensure no space above the text
-  },
-  titleContainer: {
-    flexDirection: 'row', // Align items horizontally
-    alignItems: 'center', // Center the items vertically
-    marginBottom: -25,
-    marginLeft :11
-  },
-  title: {
-    fontSize: 85, // Set marginBottom to 0 to avoid space below the title
-    textAlign: 'right',
-    fontWeight: 'bold',
-    color: 'white',
-    fontFamily: 'SpaceMono', // Add some space between the title and the icon
-  },
-  dumbbellIcon: {
-    marginRight:15
-    // You can adjust this style to change the position of the icon if needed
+  titleImage: {
+    ...globalStyles.headerImage,
+    width: '95%',
+    height: '20%',
+    marginBottom: theme.spacing.xxLarge,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderBottomColor: 'white',
     borderBottomWidth: 1,
-    marginBottom: 20,
-    marginHorizontal: 40, // Add margin to center the input fields more
+    marginBottom: theme.spacing.small,
+    marginHorizontal: theme.spacing.large,
   },
   icon: {
-    marginRight: 0,
+    marginRight: theme.spacing.small,
   },
   input: {
-    height: 40,
+    ...globalStyles.input,
     flex: 1,
-    paddingHorizontal: 8,
-    fontFamily: 'SpaceMono',
-    color: 'white',
+    paddingHorizontal: theme.spacing.small,
+    color: theme.colors.textPrimary,
   },
   signInButton: {
-    backgroundColor: '#A5D6A7',
-    paddingVertical: 10, // Reduced padding for narrower button
-    paddingHorizontal: 25, // Adjusted horizontal padding
-    borderRadius: 5,
-    alignItems: 'center',
-    marginBottom: 12,
-    marginHorizontal: 40, // Center the button
+    ...globalStyles.button,
+    backgroundColor: theme.colors.buttonBackground,
+    borderColor: theme.colors.border,
+    borderWidth: 1.5,
+    shadowColor: 'black',
   },
   signInText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
+    ...globalStyles.buttonText,
+    color: theme.colors.textSecondary,
+
   },
   signUpContainer: {
     flexDirection: 'row',
@@ -175,25 +137,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   signUpText: {
-    color: 'white',
-    fontSize: 16,
+    color: theme.colors.textPrimary,
+    fontSize: theme.fonts.regular,
   },
   signUpLink: {
-    color: '#A5D6A7',
-    fontSize: 16,
+    color: theme.colors.primary,
+    fontSize: theme.fonts.regular,
     textDecorationLine: 'underline',
   },
   adminButton: {
     position: 'absolute',
-    bottom: 20,
-    left: 20,
-    backgroundColor: '#f0f0f0',
-    padding: 8,
-    borderRadius: 5,
+    bottom: theme.spacing.medium,
+    left: theme.spacing.medium,
+    backgroundColor: theme.colors.modalBackground,
+    padding: theme.spacing.small,
+    borderRadius: theme.borderRadius.small,
   },
   adminText: {
-    color: '#333',
-    fontSize: 12,
+    color: theme.colors.textSecondary,
+    fontSize: theme.fonts.regular,
   },
 });
 

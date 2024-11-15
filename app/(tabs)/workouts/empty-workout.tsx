@@ -1,431 +1,469 @@
-import React, { useState } from 'react';
-import { View, SafeAreaView, Text, TextInput, Modal, FlatList, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
-import { CheckBox } from 'react-native-elements';
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import React, { useState, useEffect } from "react";
+import { View, SafeAreaView, Text, TextInput, Modal, FlatList, TouchableOpacity, StyleSheet, ScrollView, Image } from "react-native";
+import { CheckBox } from "react-native-elements";
+import Icon from "react-native-vector-icons/FontAwesome5";
+import axios from "axios";
+import { useRouter } from "expo-router";
+import { globalStyles } from '../../../assets/styles/globalStyles';
+import { theme } from '../../../assets/styles/theme';
+
+const headerImage = require("../../../assets/images/VigilWeight.png");
 
 interface Exercise {
-    id: string;
-    name: string;
-    muscle: string;
-    sets: Set[];
+	id: number;
+	description: string;
+	name: string;
+	musclegroup: string;
+	sets: Set[];
 }
 
 interface Set {
-    set: number;
-    lbs: number;
-    reps: number;
-    completed: boolean;
-    restTime: number;
-    timer: number;
-    timerActive: boolean;
+	set: number;
+	lbs: number;
+	reps: number;
+	completed: boolean;
+	restTime: number;
 }
 
-const ExerciseApp = () => {
-    const [exercises, setExercises] = useState<Exercise[]>([]);
-    const [isExerciseModalVisible, setExerciseModalVisible] = useState(false);
-    const [isMuscleGroupModalVisible, setMuscleGroupModalVisible] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<string | null>(null);
-    const toggleTimer = (exerciseIndex: number, setIndex: number) => {
-        const newExercises = [...exercises];
-        const currentSet = newExercises[exerciseIndex].sets[setIndex];
+interface ExerciseAppProps {
+	initialExercises?: Exercise[];
+}
 
-        if (currentSet.timerActive) {
-            clearInterval(currentSet.timerInterval);  // Stop the timer
-            currentSet.timerActive = false;
-        } else {
-            currentSet.timerActive = true;
-            currentSet.timerInterval = setInterval(() => {
-                const newTime = currentSet.timer - 1;
-                if (newTime <= 0) {
-                    clearInterval(currentSet.timerInterval);
-                    currentSet.timerActive = false;
-                    currentSet.timer = 0;
-                } else {
-                    currentSet.timer = newTime;
-                }
-                setExercises([...newExercises]);
-            }, 1000);  // Update every second
-        }
-    };
+const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
+	const router = useRouter();
+	const [exercises, setExercises] = useState<Exercise[]>(initialExercises);
+	const [isExerciseModalVisible, setExerciseModalVisible] = useState(false);
+	const [availableExercises, setAvailableExercises] = useState<Exercise[]>([]);
+	const [muscleGroups, setMuscleGroups] = useState<string[]>([]);
+	const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<string | null>(null);
 
-    // Default exercise options
-    const exerciseOptions = [
-        { id: '1', name: 'Bench Press', muscle: 'Chest' },
-        { id: '2', name: 'Squats', muscle: 'Legs' },
-        { id: '3', name: 'Deadlift', muscle: 'Back' },
-        { id: '4', name: 'Incline Bench Press', muscle: 'Chest' },
-        { id: '5', name: 'Dumbbell Fly', muscle: 'Chest' },
-        { id: '6', name: 'Leg Press', muscle: 'Legs' },
-        { id: '7', name: 'Lunges', muscle: 'Legs' },
-        { id: '8', name: 'Leg Curl', muscle: 'Legs' },
-        { id: '9', name: 'Leg Extension', muscle: 'Legs' },
-        { id: '10', name: 'Pull-Up', muscle: 'Back' },
-        { id: '11', name: 'Lat Pulldown', muscle: 'Back' },
-        { id: '12', name: 'Seated Row', muscle: 'Back' },
-        { id: '13', name: 'Barbell Row', muscle: 'Back' },
-        { id: '14', name: 'T-Bar Row', muscle: 'Back' },
-        { id: '15', name: 'Overhead Press', muscle: 'Shoulders' },
-        { id: '16', name: 'Dumbbell Shoulder Press', muscle: 'Shoulders' },
-        { id: '17', name: 'Lateral Raise', muscle: 'Shoulders' },
-        { id: '18', name: 'Front Raise', muscle: 'Shoulders' },
-        { id: '19', name: 'Face Pull', muscle: 'Shoulders' },
-        { id: '20', name: 'Bicep Curl', muscle: 'Biceps' },
-        { id: '21', name: 'Hammer Curl', muscle: 'Biceps' },
-        { id: '22', name: 'Preacher Curl', muscle: 'Biceps' },
-        { id: '23', name: 'Concentration Curl', muscle: 'Biceps' },
-        { id: '24', name: 'Tricep Pushdown', muscle: 'Triceps' },
-        { id: '25', name: 'Tricep Extension', muscle: 'Triceps' },
-        { id: '26', name: 'Skull Crusher', muscle: 'Triceps' },
-        { id: '27', name: 'Dips', muscle: 'Triceps' },
-        { id: '28', name: 'Chest Dip', muscle: 'Chest' },
-        { id: '29', name: 'Calf Raise', muscle: 'Calves' },
-        { id: '30', name: 'Seated Calf Raise', muscle: 'Calves' },
-        { id: '31', name: 'Crunch', muscle: 'Abs' },
-        { id: '32', name: 'Plank', muscle: 'Abs' },
-        { id: '33', name: 'Russian Twist', muscle: 'Abs' },
-        { id: '34', name: 'Bicycle Crunch', muscle: 'Abs' },
-        { id: '35', name: 'Leg Raise', muscle: 'Abs' },
-        { id: '36', name: 'Hanging Leg Raise', muscle: 'Abs' },
-        { id: '37', name: 'Hip Thrust', muscle: 'Glutes' },
-        { id: '38', name: 'Glute Bridge', muscle: 'Glutes' },
-        { id: '39', name: 'Step-Up', muscle: 'Legs' },
-        { id: '40', name: 'Bulgarian Split Squat', muscle: 'Legs' },
-        { id: '41', name: 'Good Morning', muscle: 'Back' },
-        { id: '42', name: 'Cable Row', muscle: 'Back' },
-        { id: '43', name: 'Chest Fly', muscle: 'Chest' },
-        { id: '44', name: 'Pec Deck', muscle: 'Chest' },
-        { id: '45', name: 'High Row', muscle: 'Back' },
-        { id: '46', name: 'Farmers Walk', muscle: 'Full Body' },
-        { id: '47', name: 'Push-Up', muscle: 'Chest' },
-        { id: '48', name: 'Reverse Fly', muscle: 'Shoulders' },
-        { id: '49', name: 'Cable Lateral Raise', muscle: 'Shoulders' },
-        { id: '50', name: 'Rear Delt Row', muscle: 'Shoulders' },
-        { id: '51', name: 'The Zach', muscle: 'Forearms' },
-    ];
-    const muscleGroups = Array.from(new Set(exerciseOptions.map(ex => ex.muscle)));
+	useEffect(() => {
+		const fetchExercises = async () => {
+			try {
+				const { data } = await axios.get("https://no-pain-no-main.azurewebsites.net/exercises");
+				const exercisesWithSets = data.map((exercise: any) => ({
+					...exercise,
+					sets: [{ set: 1, lbs: 0, reps: 0, completed: false, restTime: 120 }],
+				}));
+				setAvailableExercises(exercisesWithSets);
 
-    const filteredExercises = exerciseOptions.filter(exercise => {
-        const matchesSearch = exercise.name.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesMuscleGroup = selectedMuscleGroup ? exercise.muscle === selectedMuscleGroup : true;
-        return matchesSearch && matchesMuscleGroup;
-    });
+				// Derive unique muscle groups
+				const uniqueMuscleGroups = Array.from(new Set(exercisesWithSets.map((ex) => ex.musclegroup)));
+				setMuscleGroups(uniqueMuscleGroups);
+			} catch (error) {
+				console.error("Error fetching exercises:", error);
+			}
+		};
+		fetchExercises();
+	}, []);
 
-    const handleMuscleGroupSelect = (muscle: string) => {
-        setSelectedMuscleGroup(muscle);
-        setMuscleGroupModalVisible(false);
-    };
+	const addExercise = (exercise: Omit<Exercise, "sets">) => {
+		if (exercises.some((e) => e.id === exercise.id)) {
+			alert("Exercise already added");
+			return;
+		}
+		setExercises([
+			...exercises,
+			{
+				...exercise,
+				sets: [{ set: 1, lbs: 0, reps: 0, completed: false, restTime: 120 }],
+			},
+		]);
+		setExerciseModalVisible(false);
+	};
 
-    const addExercise = (exercise: Omit<Exercise, 'sets'>) => {
-        if (exercises.some(e => e.id === exercise.id)) {
-            alert('Exercise already added');
-            return;
-        }
-        setExercises([...exercises, {
-            ...exercise,
-            sets: [{ set: 1, lbs: 0, reps: 0, completed: false, restTime: 120, timer: 120, timerActive: false }]
-        }]);
-        setExerciseModalVisible(false);
-    };
+	const addSet = (exerciseIndex: number) => {
+		const newExercises = [...exercises];
+		const currentSets = newExercises[exerciseIndex].sets;
+		const newSet = {
+			set: currentSets.length + 1,
+			lbs: 0,
+			reps: 0,
+			completed: false,
+			restTime: 120,
+		};
+		currentSets.push(newSet);
+		setExercises(newExercises);
+	};
 
-    const addSet = (exerciseIndex: number) => {
-        const newExercises = [...exercises];
-        const currentSets = newExercises[exerciseIndex].sets;
-        const newSet = { set: currentSets.length + 1, lbs: 0, reps: 0, completed: false, restTime: 120, timer: 120, timerActive: false };
-        currentSets.push(newSet);
-        setExercises(newExercises);
-    };
+	const updateSet = (exerciseIndex: number, setIndex: number, field: keyof Set, value: string | number | boolean) => {
+		const updatedExercises = [...exercises];
+		updatedExercises[exerciseIndex].sets[setIndex][field] = value;
+		setExercises(updatedExercises);
+	};
 
-    const updateSet = (exerciseIndex: number, setIndex: number, field: keyof Set, value: string | number | boolean) => {
-        const updatedExercises = [...exercises];
-        updatedExercises[exerciseIndex].sets[setIndex][field] = value;
-        setExercises(updatedExercises);
-    };
+	const handleMuscleGroupSelect = (muscle: string) => {
+		setSelectedMuscleGroup(muscle);
+	};
 
-    return (
-        <SafeAreaView style={styles.safeAreaContainer}>
-            <ScrollView style={styles.container}>
-                {/* Top Icon Placeholder */}
-                <View style={styles.topIconContainer}>
-                    <Icon name="dumbbell" size={80} color="#A5D6A7" />
-                </View>
+	return (
+		<SafeAreaView style={styles.safeAreaContainer}>
+			<ScrollView style={styles.container}>
+				<View style={styles.topIconContainer}>
+					<Image source={headerImage} style={styles.headerImage} />
+				</View>
+				<View style={styles.divider} />
+				{exercises.map((exercise, exerciseIndex) => (
+					<View key={exercise.id} style={styles.exerciseContainer}>
+						<Text style={styles.exerciseTitle}>{exercise.name.toUpperCase()}</Text>
+						<Text style={styles.exerciseSubtitle}>{exercise.musclegroup.toUpperCase()}</Text>
+						<View style={styles.headerRow}>
+							<Text style={styles.columnHeader}>Set</Text>
+							<Text style={styles.columnHeader}>Lbs</Text>
+							<Text style={styles.columnHeader}>Reps</Text>
+							<Text style={styles.columnHeader}>✓</Text>
+						</View>
+						{exercise.sets.map((set, setIndex) => (
+							<View key={setIndex} style={styles.row}>
+								<View style={styles.cell}>
+									<Text style={styles.cellText}>{set.set}</Text>
+								</View>
+								<View style={styles.cell}>
+									<TextInput
+										style={styles.input}
+										keyboardType="numeric"
+										value={String(set.lbs)}
+										onChangeText={(value) => updateSet(exerciseIndex, setIndex, "lbs", Number(value))}
+									/>
+								</View>
+								<View style={styles.cell}>
+									<TextInput
+										style={styles.input}
+										keyboardType="numeric"
+										value={String(set.reps)}
+										onChangeText={(value) => updateSet(exerciseIndex, setIndex, "reps", Number(value))}
+									/>
+								</View>
+								<View style={styles.cell}>
+									<CheckBox
+										checked={set.completed}
+										onPress={() => {
+											const newCompletedState = !set.completed;
+											updateSet(exerciseIndex, setIndex, "completed", newCompletedState);
+											if (newCompletedState) {
+												// Navigate to the timer page with the exercise and set details
+												router.push({
+													pathname: "/workouts/timer",
+													params: {
+														exerciseId: exercise.id,
+														exerciseName: exercise.name,
+														setNumber: set.set,
+														restTime: set.restTime,
+													},
+												});
+											}
+										}}
+										containerStyle={styles.checkbox}
+										checkedColor= {theme.colors.primary}
+										uncheckedColor="#666"
+									/>
+								</View>
+							</View>
+						))}
+						<TouchableOpacity onPress={() => addSet(exerciseIndex)} style={styles.addSetButton}>
+							<Text style={styles.addSetButtonText}>Add Set</Text>
+						</TouchableOpacity>
+					</View>
+				))}
+				<TouchableOpacity onPress={() => setExerciseModalVisible(true)} style={styles.addExerciseButton}>
+					<Text style={styles.addExerciseText}>Add Exercise</Text>
+				</TouchableOpacity>
+				<View style={styles.divider} />
+				<ExerciseModal
+					isVisible={isExerciseModalVisible}
+					onClose={() => setExerciseModalVisible(false)}
+					availableExercises={availableExercises}
+					addExercise={addExercise}
+					muscleGroups={muscleGroups}
+					handleMuscleGroupSelect={handleMuscleGroupSelect}
+				/>
+			</ScrollView>
+		</SafeAreaView>
+	);
+};
 
-                {/* Divider Line */}
-                <View style={styles.divider} />
+const ExerciseModal = ({ isVisible, onClose, availableExercises, addExercise, muscleGroups, handleMuscleGroupSelect }) => {
+	const [searchQuery, setSearchQuery] = useState("");
+	const [isFilterModalVisible, setFilterModalVisible] = useState(false);
+	const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<string | null>(null);
 
-                {exercises.map((exercise, exerciseIndex) => (
-                    <View key={exercise.id} style={styles.exerciseContainer}>
-                        <Text style={styles.exerciseTitle}>{exercise.name.toUpperCase()}</Text>
-                        <Text style={styles.exerciseSubtitle}>{exercise.muscle.toUpperCase()}</Text>
-                        <View style={styles.headerRow}>
-                            <Text style={styles.columnHeader}>Set</Text>
-                            <Text style={styles.columnHeader}>Lbs</Text>
-                            <Text style={styles.columnHeader}>Reps</Text>
-                            <Text style={styles.columnHeader}>✓</Text>
-                            <Text style={styles.columnHeader}>Rest</Text>
-                        </View>
-                        {exercise.sets.map((set, setIndex) => (
-                            <View key={setIndex} style={styles.row}>
-                                <Text style={styles.setNumber}>{set.set}</Text>
-                                <TextInput
-                                    style={styles.input}
-                                    keyboardType="numeric"
-                                    value={String(set.lbs)}
-                                    onChangeText={(value) => updateSet(exerciseIndex, setIndex, 'lbs', Number(value))}
-                                />
-                                <TextInput
-                                    style={styles.input}
-                                    keyboardType="numeric"
-                                    value={String(set.reps)}
-                                    onChangeText={(value) => updateSet(exerciseIndex, setIndex, 'reps', Number(value))}
-                                />
-                                <CheckBox
-                                    checked={set.completed}
-                                    onPress={() => updateSet(exerciseIndex, setIndex, 'completed', !set.completed)}
-                                    containerStyle={styles.checkbox}
-                                    checkedColor="#A5D6A7"
-                                    uncheckedColor="#666"
-                                />
-                                {/* <Text style={styles.time}>{set.restTime}s</Text> */}
-                                <TouchableOpacity onPress={() => toggleTimer(exerciseIndex, setIndex)}>
-                                    <Text style={styles.time}>{set.timerActive ? `${set.timer}s` : `${set.restTime}s`}</Text>
-                                </TouchableOpacity>
-                            </View>
-                        ))}
-                        <TouchableOpacity onPress={() => addSet(exerciseIndex)} style={styles.addSetButton}>
-                            <Icon name="plus-circle" size={20} color="#A5D6A7" />
-                        </TouchableOpacity>
-                    </View>
-                ))}
+	// Filter exercises based on the search query and selected muscle group
+	const filteredExercises = availableExercises.filter((exercise) => {
+		const matchesSearch = exercise.name.toLowerCase().includes(searchQuery.toLowerCase());
+		const matchesMuscleGroup = selectedMuscleGroup ? exercise.musclegroup === selectedMuscleGroup : true;
+		return matchesSearch && matchesMuscleGroup;
+	});
 
-                <TouchableOpacity onPress={() => setExerciseModalVisible(true)} style={styles.addExerciseButton}>
-                    <Text style={styles.addExerciseText}>Add Exercise</Text>
-                </TouchableOpacity>
+	// Handle muscle group selection and close the filter modal
+	const onMuscleGroupSelect = (muscleGroup: string) => {
+		setSelectedMuscleGroup(muscleGroup);
+		setFilterModalVisible(false);
+	};
 
-                {/* Divider Line */}
-                <View style={styles.divider} />
+	// Reset the filter when the modal is closed
+	useEffect(() => {
+		if (!isVisible) {
+			setSelectedMuscleGroup(null);
+		}
+	}, [isVisible]);
 
+	return (
+		<Modal visible={isVisible} animationType="slide" transparent={true}>
+			<View style={styles.modalBackground}>
+				<View style={styles.modalContainer}>
+					<Text style={styles.modalTitle}>Select Exercise</Text>
 
-                {/* Exercise Selection Modal */}
-                <Modal visible={isExerciseModalVisible} animationType="slide">
-                    <View style={styles.modalContainer}>
-                        <Text style={styles.modalTitle}>Select Exercise</Text>
-                        <TextInput
-                            style={styles.searchBar}
-                            placeholder="Search Exercise"
-                            placeholderTextColor="#888"
-                            value={searchQuery}
-                            onChangeText={setSearchQuery}
-                        />
-                        <TouchableOpacity
-                            style={styles.filterButton}
-                            onPress={() => setMuscleGroupModalVisible(true)}
-                        >
-                            <Text style={styles.filterButtonText}>
-                                Muscle Group: {selectedMuscleGroup || 'All'}
-                            </Text>
-                        </TouchableOpacity>
-                        <FlatList
-                            data={filteredExercises}
-                            keyExtractor={(item) => item.id}
-                            renderItem={({ item }) => (
-                                <TouchableOpacity onPress={() => addExercise(item)} style={styles.modalItem}>
-                                    <Text style={styles.modalItemText}>{item.name} ({item.muscle})</Text>
-                                </TouchableOpacity>
-                            )}
-                        />
+					{/* Search Bar */}
+					<View style={styles.searchBarContainer}>
+						<Icon name="search" size={16} color= {theme.colors.primary} style={styles.searchIcon} />
+						<TextInput style={styles.searchBar} placeholder="Search" placeholderTextColor= {theme.colors.textPrimary} value={searchQuery} onChangeText={setSearchQuery} />
+					</View>
 
-                        <TouchableOpacity onPress={() => setExerciseModalVisible(false)} style={styles.modalCloseButton}>
-                            <Text style={styles.modalCloseButtonText}>Close</Text>
-                        </TouchableOpacity>
-                    </View>
-                </Modal>
+					{/* Filter Button */}
+					<TouchableOpacity style={styles.filterButton} onPress={() => setFilterModalVisible(true)}>
+						<Text style={styles.filterButtonText}>{selectedMuscleGroup ? `Filter: ${selectedMuscleGroup}` : "Filter by Muscle Group"}</Text>
+					</TouchableOpacity>
 
-                {/* Muscle Group Modal */}
-                <Modal visible={isMuscleGroupModalVisible} animationType="slide">
-                    <View style={styles.modalContainer}>
-                        <Text style={styles.modalTitle}>Select Muscle Group</Text>
-                        <FlatList
-                            data={muscleGroups}
-                            keyExtractor={(item) => item}
-                            renderItem={({ item }) => (
-                                <TouchableOpacity onPress={() => handleMuscleGroupSelect(item)} style={styles.modalItem}>
-                                    <Text style={styles.modalItemText}>{item}</Text>
-                                </TouchableOpacity>
-                            )}
-                        />
-                        <TouchableOpacity onPress={() => setMuscleGroupModalVisible(false)} style={styles.modalCloseButton}>
-                            <Text style={styles.modalCloseButtonText}>Close</Text>
-                        </TouchableOpacity>
-                    </View>
-                </Modal>
-            </ScrollView>
-        </SafeAreaView>
-    );
+					{/* Exercise List */}
+					<FlatList
+						data={filteredExercises}
+						keyExtractor={(item) => item.id.toString()}
+						renderItem={({ item }) => (
+							<TouchableOpacity onPress={() => addExercise(item)} style={styles.modalItem}>
+								<Text style={styles.modalItemText}>
+									{item.name} ({item.musclegroup})
+								</Text>
+							</TouchableOpacity>
+						)}
+						ListEmptyComponent={<Text style={styles.noResultsText}>No exercises found</Text>}
+					/>
+
+					<TouchableOpacity onPress={onClose} style={styles.modalCloseButton}>
+						<Text style={styles.modalCloseButtonText}>Close</Text>
+					</TouchableOpacity>
+				</View>
+			</View>
+
+			{/* Muscle Group Filter Modal */}
+			<Modal visible={isFilterModalVisible} animationType="slide" transparent={true}>
+				<View style={styles.modalBackground}>
+					<View style={styles.modalContainer}>
+						<Text style={styles.modalTitle}>Select Muscle Group</Text>
+						<FlatList
+							data={muscleGroups}
+							keyExtractor={(item) => item}
+							renderItem={({ item }) => (
+								<TouchableOpacity onPress={() => onMuscleGroupSelect(item)} style={styles.modalItem}>
+									<Text style={styles.modalItemText}>{item}</Text>
+								</TouchableOpacity>
+							)}
+						/>
+						<TouchableOpacity onPress={() => setFilterModalVisible(false)} style={styles.modalCloseButton}>
+							<Text style={styles.modalCloseButtonText}>Close</Text>
+						</TouchableOpacity>
+					</View>
+				</View>
+			</Modal>
+		</Modal>
+	);
 };
 
 const styles = StyleSheet.create({
-    safeAreaContainer: {
-        flex: 1,
-        backgroundColor: '#0D1B2A',  // This ensures that the content doesn't overlap with device's notch or bottom area
-    },
-    container: {
-        flex: 1,
-        padding: 20,
-        backgroundColor: '#0D1B2A',
-    },
-    topIconContainer: {
-        alignItems: 'center',
-        marginBottom: 20,
-        paddingTop: 20,
-    },
-    divider: {
-        height: 1,
-        backgroundColor: '#A5D6A7',
-        marginVertical: 10,
-        opacity: 0.5,
-    },
-    exerciseContainer: {
-        marginBottom: 20,
-        padding: 15,
-        backgroundColor: '#1B263B',
-        borderRadius: 8,
-    },
-    exerciseTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#A5D6A7',
-    },
-    exerciseSubtitle: {
-        fontSize: 16,
-        color: '#A5D6A7',
-        marginBottom: 10,
-    },
-    headerRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderBottomColor: '#A5D6A7',
-        borderBottomWidth: 1,
-        paddingBottom: 5,
-    },
-    columnHeader: {
-        color: '#A5D6A7',
-        fontWeight: 'bold',
-        textAlign: 'center',
-        flex: 1,
-    },
-    row: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginVertical: 5,
-    },
-    setNumber: {
-        color: '#FFF',
-        textAlign: 'center',
-        flex: 1,
-        fontWeight: 'bold',
-    },
-    input: {
-        backgroundColor: '#1F2A38',
-        color: '#FFFFFF',
-        borderRadius: 8,
-        paddingVertical: 5,
-        fontSize: 14,
-        fontWeight: 'bold',
-        borderColor: '#324A5F',
-        borderWidth: 1,
-        textAlign: 'center',
-        flex: 1,
-    },
-    checkbox: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'transparent',
-    },
-    timeContainer: {
-        width: 60,  // Ensures the time text has the same width as other elements
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    time: {
-        fontSize: 16,
-        color: 'white',
-        marginLeft: 11
-    },
-    addSetButton: {
-        marginTop: 10,
-        alignItems: 'center',
-    },
-    addExerciseButton: {
-        backgroundColor: '#A5D6A7',
-        padding: 15,
-        borderRadius: 8,
-        alignItems: 'center',
-        marginVertical: 20,
-    },
-    addExerciseText: {
-        color: '#0D1B2A',
-        fontWeight: 'bold',
-    },
-    bottomIconContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'flex-end',
-        paddingBottom: 20,
-        opacity: 0.5,
-    },
-    modalContainer: {
-        flex: 1,
-        padding: 20,
-        backgroundColor: '#0D1B2A',
-    },
-    modalTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#A5D6A7',
-        marginBottom: 10,
-    },
-    modalItem: {
-        padding: 10,
-        borderBottomColor: '#444',
-        borderBottomWidth: 1,
-    },
-    modalItemText: {
-        color: '#FFF',
-    },
-    modalCloseButton: {
-        backgroundColor: '#A5D6A7',
-        padding: 15,
-        borderRadius: 8,
-        alignItems: 'center',
-        marginTop: 20,
-    },
-    modalCloseButtonText: {
-        color: '#0D1B2A',
-        fontWeight: 'bold',
-    },
-    searchBar: {
-        backgroundColor: '#1F2A38',
-        borderRadius: 8,
-        padding: 10,
-        color: '#FFF',
-        marginBottom: 15,
-        fontSize: 16,
-    },
-    filterButton: {
-        backgroundColor: '#324A5F',
-        padding: 10,
-        borderRadius: 8,
-        alignItems: 'center',
-        marginBottom: 15,
-    },
-    filterButtonText: {
-        color: '#A5D6A7',
-        fontWeight: 'bold',
-        fontSize: 16,
-    },
+	safeAreaContainer: {
+		...globalStyles.safeAreaContainer
+	},
+	container: {
+		flex: 1,
+		padding: theme.spacing.medium,
+		backgroundColor: theme.colors.background,
+	},
+	topIconContainer: {
+		alignItems: "center",
+		marginBottom: theme.spacing.medium,
+		paddingTop: theme.spacing.medium,
+	},
+	headerImage: {
+		...globalStyles.headerImage,
+	},
+	divider: {
+		height: 1,
+		backgroundColor: theme.colors.primary,
+		opacity: 0.1,
+	},
+	exerciseContainer: {
+		marginBottom: theme.spacing.medium,
+		padding: theme.spacing.medium,
+		backgroundColor: theme.colors.cardBackground,
+		borderRadius: 8,
+	},
+	exerciseTitle: {
+		fontSize: theme.fonts.large,
+		fontWeight: "bold",
+		color: theme.colors.textPrimary,
+	},
+	noResultsText: {
+		color: theme.colors.textPrimary,
+		textAlign: "center",
+	},
+	exerciseSubtitle: {
+		fontSize: theme.fonts.regular,
+		color: theme.colors.textSecondary,
+		marginBottom: 10,
+	},
+	headerRow: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "space-around",
+		paddingVertical: 5,
+		borderBottomColor: theme.colors.primary,
+		borderBottomWidth: 1,
+	},
+	cell: {
+		flex: 1,
+		alignItems: "center",
+		justifyContent: "center",
+	},
+	searchBarContainer: {
+		flexDirection: "row",
+		alignItems: "center",
+		backgroundColor: theme.colors.inputBackground,
+		borderColor: theme.colors.primary,
+		borderWidth: 1,
+		borderRadius: theme.borderRadius.medium,
+		paddingHorizontal: theme.spacing.medium,
+		marginBottom: theme.spacing.medium - 5,
+		width: "100%",
+		height: 35,
+	},
+	searchIcon: {
+		marginRight: 8,
+	},
+	searchBar: {
+		flex: 1,
+		color: theme.colors.textPrimary,
+		fontSize: theme.fonts.regular,
+		padding: 0,
+	},
+	cellText: {
+		color: theme.colors.textPrimary,
+		fontWeight: "bold",
+		textAlign: "center",
+	},
+	row: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "space-around",
+		paddingVertical: 5,
+		marginVertical: 5,
+		borderBottomColor: theme.colors.border,
+		borderBottomWidth: 1,
+	},
+	columnHeader: {
+		flex: 1,
+		textAlign: "center",
+		color: theme.colors.textSecondary,
+		fontWeight: "bold",
+	},
+	setNumber: {
+		color: theme.colors.textPrimary,
+		textAlign: "center",
+		fontWeight: "bold",
+	},
+	input: {
+		backgroundColor: theme.colors.inputBackground,
+		color: theme.colors.textPrimary,
+		borderRadius: 8,
+		paddingVertical: 5,
+		paddingHorizontal: theme.spacing.medium,
+		fontSize: theme.fonts.regular - 2,
+		fontWeight: "bold",
+		borderColor: theme.colors.border,
+		borderWidth: 1,
+		textAlign: "center",
+		width: "90%",
+	},
+	checkbox: {
+		backgroundColor: "transparent",
+		padding: 0,
+		margin: 0,
+		alignItems: "center",
+		justifyContent: "center",
+	},
+	addExerciseButton: {
+		backgroundColor: theme.colors.primary,
+		padding: theme.spacing.small,
+		borderRadius: theme.borderRadius.medium,
+		alignItems: "center",
+		marginVertical: theme.spacing.medium,
+		width: "80%",
+		alignSelf: "center",
+	},
+	addExerciseText: {
+		color: theme.colors.textPrimary,
+		fontWeight: "bold",
+	},
+	bottomIconContainer: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "flex-end",
+		paddingBottom: theme.spacing.medium,
+		opacity: 0.5,
+	},
+	modalBackground: {
+		flex: 1,
+		justifyContent: "center",
+		alignItems: "center",
+	},
+	modalContainer: {
+		...globalStyles.modalContainer,
+	},
+	modalTitle: {
+		...globalStyles.modalTitle,
+	},
+	modalItem: {
+		padding: theme.spacing.medium,
+		borderBottomColor: theme.colors.border,
+		borderBottomWidth: 1,
+	},
+	modalItemText: {
+		color: theme.colors.textPrimary,
+	},
+	modalCloseButton: {
+		backgroundColor: theme.colors.primary,
+		padding: theme.spacing.small,
+		borderRadius: 8,
+		alignItems: "center",
+		marginTop: theme.spacing.medium,
+	},
+	modalCloseButtonText: {
+		color: theme.colors.textPrimary,
+		fontWeight: "bold",
+	},
+	addSetButton: {
+		marginTop: theme.spacing.small,
+		padding: theme.spacing.small,
+		backgroundColor: theme.colors.primary,
+		borderRadius: theme.borderRadius.medium,
+	},
+	addSetButtonText: {
+		color: theme.colors.textPrimary,
+		fontWeight: "bold",
+		textAlign: "center",
+	},
+	filterButton: {
+		backgroundColor: theme.colors.inputBackground,
+		padding: theme.spacing.small,
+		borderRadius: theme.borderRadius.medium,
+		alignItems: "center",
+		marginBottom: theme.spacing.small,
+		width: "80%",
+		alignSelf: "center",
+	},
+	filterButtonText: {
+		color: theme.colors.textSecondary,
+		fontWeight: "bold",
+		fontSize: theme.fonts.regular,
+	},
 });
 
 export default ExerciseApp;

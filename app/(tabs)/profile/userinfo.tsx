@@ -1,13 +1,12 @@
 import { StyleSheet, Text, View, Button, Alert } from 'react-native'
 import React from 'react'
+
 import { useNavigation } from '@react-navigation/native';
 
 const UserInfo = () => {
-
-    const navigation = useNavigation();
-
     // Handle Log Out action
     const handleLogOut = () => {
+        const navigation = useNavigation();
         // Add logic for logging out the user, for example:
         // Clerk.logout(); or some other method from your authentication provider
         Alert.alert("Logged Out", "You have been logged out.");
