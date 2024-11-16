@@ -1,5 +1,6 @@
 import { StyleSheet, Text, TextInput, View, ScrollView, SafeAreaView } from 'react-native';
 import React, { useState } from 'react';
+import { theme } from "../../../assets/styles/theme";
 
 const Goals = () => {
   // State to hold user inputs for personal record goals and weight goals
@@ -22,6 +23,7 @@ const Goals = () => {
             <TextInput
               style={styles.goalInput}
               placeholder="Enter Deadlift Goal"
+              placeholderTextColor="white"  // Added placeholder color
               keyboardType="numeric"
               value={deadlift}
               onChangeText={setDeadlift}
@@ -34,6 +36,7 @@ const Goals = () => {
             <TextInput
               style={styles.goalInput}
               placeholder="Enter Squat Goal"
+              placeholderTextColor="white"  // Added placeholder color
               keyboardType="numeric"
               value={squat}
               onChangeText={setSquat}
@@ -46,6 +49,7 @@ const Goals = () => {
             <TextInput
               style={styles.goalInput}
               placeholder="Enter Bench Press Goal"
+              placeholderTextColor="white"  // Added placeholder color
               keyboardType="numeric"
               value={benchPress}
               onChangeText={setBenchPress}
@@ -63,6 +67,7 @@ const Goals = () => {
             <TextInput
               style={styles.goalInput}
               placeholder="Enter Current Weight"
+              placeholderTextColor="white"  // Added placeholder color
               keyboardType="numeric"
               value={currentWeight}
               onChangeText={setCurrentWeight}
@@ -75,6 +80,7 @@ const Goals = () => {
             <TextInput
               style={styles.goalInput}
               placeholder="Enter Goal Weight"
+              placeholderTextColor="white"  // Added placeholder color
               keyboardType="numeric"
               value={goalWeight}
               onChangeText={setGoalWeight}
@@ -91,7 +97,7 @@ export default Goals;
 const styles = StyleSheet.create({
   safeContainer: {
     flex: 1,
-    backgroundColor: '#0D1B2A',
+    backgroundColor: theme.colors.cardBackground,
   },
   container: {
     padding: 20,
@@ -125,5 +131,6 @@ const styles = StyleSheet.create({
     width: 100,
     textAlign: 'center',
     borderRadius: 5,
+    color: 'white', // White text for user input
   },
 });
