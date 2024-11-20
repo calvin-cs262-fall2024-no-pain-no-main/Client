@@ -49,7 +49,7 @@ const SignUp = () => {
     };
 
     const handleBackToLogin = () => {
-        router.push('/signup/signup'); // Navigate back to the login page
+        router.push('/'); // Navigate back to the login page
     };
 
     return (
