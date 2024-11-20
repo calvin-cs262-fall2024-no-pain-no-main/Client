@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons'; // For icons
-import { globalStyles} from '../assets/styles/globalStyles';
+import { globalStyles } from '../assets/styles/globalStyles';
 import { theme } from '@/assets/styles/theme';
 
 const Login = () => {
@@ -36,7 +36,7 @@ const Login = () => {
   };
 
   const handleSignUp = () => {
-    router.push('/sign-up'); // Adjust to your desired route
+    router.push('/signup/signup'); // Adjust to your desired route
   };
 
   const handleAdmin = () => {
@@ -45,7 +45,7 @@ const Login = () => {
 
   return (
     <View style={styles.container}>
-      <Image source={require('../assets/images/VigilFullLogo.png')} style={styles.titleImage} resizeMode='contain'/>
+      <Image source={require('../assets/images/VigilFullLogo.png')} style={styles.titleImage} resizeMode='contain' />
 
       <TouchableOpacity style={styles.adminButton} onPress={handleAdmin}>
         <Text style={styles.adminText}>Admin</Text>
