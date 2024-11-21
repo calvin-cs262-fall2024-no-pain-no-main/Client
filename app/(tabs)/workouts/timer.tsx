@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import axios from "axios";
 import { globalStyles } from "../../../assets/styles/globalStyles";
 import { theme } from "../../../assets/styles/theme";
+import PageWrapper from "@/assets/styles/pageWrapper";
 
 const TimerPage: React.FC = () => {
 	const router = useRouter();
@@ -88,44 +89,46 @@ const TimerPage: React.FC = () => {
 	}
 
 	return (
-		<View style={styles.container}>
-			<Text style={styles.timer}>{`${Math.floor(timer / 60)}:${String(Math.floor(timer % 60)).padStart(2, "0")}`}</Text>
+		<PageWrapper>
+			<View style={styles.container}>
+				<Text style={styles.timer}>{`${Math.floor(timer / 60)}:${String(Math.floor(timer % 60)).padStart(2, "0")}`}</Text>
 
-			{/* Custom Progress Bar */}
-			<View style={styles.progressBarContainer}>
-				<View style={[styles.progressBar, { width: `${(timer / 45) * 100}%` }]} />
+				{/* Custom Progress Bar */}
+				<View style={styles.progressBarContainer}>
+					<View style={[styles.progressBar, { width: `${(timer / 45) * 100}%` }]} />
+				</View>
+
+				<Text style={styles.question}>{`Q: ${currentQuestion.question}`}</Text>
+
+				{/* Render answer options */}
+				{[currentQuestion.correctanswer, ...currentQuestion.incorrectanswers.split(", ")].map((option, index) => (
+					<TouchableOpacity
+						key={index}
+						style={[
+							styles.optionButton,
+							selectedAnswer === option && isCorrect === true && styles.correctOption,
+							selectedAnswer === option && isCorrect === false && styles.incorrectOption,
+							correctAnswerShown && option === currentQuestion.correctanswer && styles.correctOption,
+						]}
+						onPress={() => handleAnswerSelect(option)}
+						disabled={selectedAnswer !== null}>
+						<Text style={styles.optionText}>{option}</Text>
+					</TouchableOpacity>
+				))}
+
+				{/* Feedback after selecting an answer */}
+				{selectedAnswer && (
+					<Text style={styles.feedbackText}>{isCorrect ? `Correct! ${currentQuestion.description}` : `Incorrect! ${currentQuestion.description}`}</Text>
+				)}
+
+				{/* Next Question Button */}
+				{selectedAnswer && (
+					<TouchableOpacity style={styles.nextButton} onPress={loadNextQuestion}>
+						<Text style={styles.nextButtonText}>Next Question</Text>
+					</TouchableOpacity>
+				)}
 			</View>
-
-			<Text style={styles.question}>{`Q: ${currentQuestion.question}`}</Text>
-
-			{/* Render answer options */}
-			{[currentQuestion.correctanswer, ...currentQuestion.incorrectanswers.split(", ")].map((option, index) => (
-				<TouchableOpacity
-					key={index}
-					style={[
-						styles.optionButton,
-						selectedAnswer === option && isCorrect === true && styles.correctOption,
-						selectedAnswer === option && isCorrect === false && styles.incorrectOption,
-						correctAnswerShown && option === currentQuestion.correctanswer && styles.correctOption,
-					]}
-					onPress={() => handleAnswerSelect(option)}
-					disabled={selectedAnswer !== null}>
-					<Text style={styles.optionText}>{option}</Text>
-				</TouchableOpacity>
-			))}
-
-			{/* Feedback after selecting an answer */}
-			{selectedAnswer && (
-				<Text style={styles.feedbackText}>{isCorrect ? `Correct! ${currentQuestion.description}` : `Incorrect! ${currentQuestion.description}`}</Text>
-			)}
-
-			{/* Next Question Button */}
-			{selectedAnswer && (
-				<TouchableOpacity style={styles.nextButton} onPress={loadNextQuestion}>
-					<Text style={styles.nextButtonText}>Next Question</Text>
-				</TouchableOpacity>
-			)}
-		</View>
+		</PageWrapper>
 	);
 };
 

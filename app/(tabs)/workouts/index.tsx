@@ -5,6 +5,7 @@ import axios from "axios";
 import { globalStyles } from "../../../assets/styles/globalStyles";
 import { theme } from "../../../assets/styles/theme";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import PageWrapper from "../../../assets/styles/pageWrapper";
 
 const headerImage = require("../../../assets/images/VigilWeight.png");
 
@@ -103,8 +104,9 @@ const Workouts = () => {
 	}
 
 	return (
+		<PageWrapper>
 		<SafeAreaView style={styles.safeArea}>
-			<ScrollView style={styles.scrollView} contentContainerStyle={styles.contentContainer}>
+			<ScrollView style={styles.scrollView} contentContainerStyle={styles.contentContainer}showsHorizontalScrollIndicator = {false} showsVerticalScrollIndicator = {false}>
 				<Image source={headerImage} style={styles.headerImage} />
 
 				<Text style={styles.sectionTitle} numberOfLines={1} ellipsizeMode="tail">
@@ -136,6 +138,7 @@ const Workouts = () => {
 				</TouchableOpacity>
 			</ScrollView>
 		</SafeAreaView>
+		</PageWrapper>
 	);
 };
 

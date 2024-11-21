@@ -14,6 +14,11 @@ export const theme = {
       buttonBackground: '#042420',
       modalBackground: '#042420'
   },
+
+  images: {
+    background: require('../images/background.jpg'),
+  },
+
   spacing: {
       small: 10,
       medium: 20,

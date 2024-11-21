@@ -6,14 +6,29 @@ export const globalStyles = StyleSheet.create({
     container: {
         flex: 1,
         padding: theme.spacing.medium,
-        backgroundColor: theme.colors.background,
+        backgroundColor: 'transparent',
         justifyContent: 'center',
         alignItems: 'center',
     },
     safeAreaContainer: {
         flex: 1,
-        backgroundColor: theme.colors.background,
+        backgroundColor: 'transparent',
     },
+    containerWithBackground: {
+        flex: 1,
+        position: 'relative', 
+    },
+    backgroundImage: {
+        position: 'absolute',
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
+    },
+    contentContainer: {
+        flex: 1,
+        padding: theme.spacing.medium,
+    },
+    // Existing styles below
     textPrimary: {
         color: theme.colors.textPrimary,
         fontSize: theme.fonts.regular,
