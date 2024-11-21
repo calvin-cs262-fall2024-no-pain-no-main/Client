@@ -8,6 +8,7 @@ import { globalStyles } from "../../../assets/styles/globalStyles";
 import { theme } from "../../../assets/styles/theme";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert } from "react-native";
+import PageWrapper from "../../../assets/styles/pageWrapper";
 
 const headerImage = require("../../../assets/images/VigilWeight.png");
 
@@ -49,16 +50,16 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
 					const parsedExercises = JSON.parse(savedExercises);
 					setExercises(parsedExercises);
 				}
-	
+
 				// Fetch all available exercises from the API
 				const { data } = await axios.get("https://no-pain-no-main.azurewebsites.net/exercises");
 				const exercisesWithSets = data.map((exercise: any) => ({
 					...exercise,
 					sets: [{ set: 1, lbs: 0, reps: 0, completed: false, restTime: 120 }],
 				}));
-	
+
 				setAvailableExercises(exercisesWithSets);
-	
+
 				// Derive unique muscle groups
 				const uniqueMuscleGroups = Array.from(new Set(exercisesWithSets.map((ex) => ex.musclegroup)));
 				setMuscleGroups(uniqueMuscleGroups);
@@ -67,10 +68,9 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
 				Alert.alert("Error", "Failed to load exercises. Please try again.");
 			}
 		};
-	
+
 		fetchData();
 	}, []);
-	
 
 	const addExercise = (exercise: Exercise) => {
 		if (exercises.some((e) => e.id === exercise.id)) {
@@ -146,102 +146,104 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
 	};
 
 	return (
-		<SafeAreaView style={styles.safeAreaContainer}>
-			<ScrollView style={styles.container}>
-				<View style={styles.topIconContainer}>
-					<Image source={headerImage} style={styles.headerImage} />
-				</View>
-				<View style={styles.inputWithButton}>
-					<TextInput
-						style={styles.saveExerciseText}
-						placeholder="Enter Workout Name"
-						placeholderTextColor={theme.colors.textSecondary}
-						value={workoutName}
-						onChangeText={setWorkoutName}
-					/>
+		<PageWrapper>
+			<SafeAreaView style={styles.safeAreaContainer}>
+				<ScrollView style={styles.container} showsHorizontalScrollIndicator = {false} showsVerticalScrollIndicator = {false}>
+					<View style={styles.topIconContainer}>
+						<Image source={headerImage} style={styles.headerImage} />
+					</View>
+					<View style={styles.inputWithButton}>
+						<TextInput
+							style={styles.saveExerciseText}
+							placeholder="Enter Workout Name"
+							placeholderTextColor={theme.colors.textSecondary}
+							value={workoutName}
+							onChangeText={setWorkoutName}
+						/>
 
-					<TouchableOpacity style={styles.saveButton} onPress={saveWorkout}>
-						<Text style={styles.saveButtonText}>Save</Text>
-					</TouchableOpacity>
-				</View>
-
-				<View style={styles.divider} />
-				{exercises.map((exercise, exerciseIndex) => (
-					<View key={exercise.id} style={styles.exerciseContainer}>
-						<Text style={styles.exerciseTitle}>{exercise.name.toUpperCase()}</Text>
-						<Text style={styles.exerciseSubtitle}>{exercise.musclegroup.toUpperCase()}</Text>
-						<View style={styles.headerRow}>
-							<Text style={styles.columnHeader}>Set</Text>
-							<Text style={styles.columnHeader}>Lbs</Text>
-							<Text style={styles.columnHeader}>Reps</Text>
-							<Text style={styles.columnHeader}>✓</Text>
-						</View>
-						{exercise.sets.map((set, setIndex) => (
-							<View key={setIndex} style={styles.row}>
-								<View style={styles.cell}>
-									<Text style={styles.cellText}>{set.set}</Text>
-								</View>
-								<View style={styles.cell}>
-									<TextInput
-										style={styles.input}
-										keyboardType="numeric"
-										value={String(set.lbs)}
-										onChangeText={(value) => updateSet(exerciseIndex, setIndex, "lbs", Number(value))}
-									/>
-								</View>
-								<View style={styles.cell}>
-									<TextInput
-										style={styles.input}
-										keyboardType="numeric"
-										value={String(set.reps)}
-										onChangeText={(value) => updateSet(exerciseIndex, setIndex, "reps", Number(value))}
-									/>
-								</View>
-								<View style={styles.cell}>
-									<CheckBox
-										checked={set.completed}
-										onPress={() => {
-											const newCompletedState = !set.completed;
-											updateSet(exerciseIndex, setIndex, "completed", newCompletedState);
-											if (newCompletedState) {
-												// Navigate to the timer page with the exercise and set details
-												router.push({
-													pathname: "/workouts/timer",
-													params: {
-														exerciseId: exercise.id,
-														exerciseName: exercise.name,
-														setNumber: set.set,
-														restTime: set.restTime,
-													},
-												});
-											}
-										}}
-										containerStyle={styles.checkbox}
-										checkedColor={theme.colors.primary}
-										uncheckedColor="#666"
-									/>
-								</View>
-							</View>
-						))}
-						<TouchableOpacity onPress={() => addSet(exerciseIndex)} style={styles.addSetButton}>
-							<Text style={styles.addSetButtonText}>Add Set</Text>
+						<TouchableOpacity style={styles.saveButton} onPress={saveWorkout}>
+							<Text style={styles.saveButtonText}>Save</Text>
 						</TouchableOpacity>
 					</View>
-				))}
-				<TouchableOpacity onPress={() => setExerciseModalVisible(true)} style={styles.addExerciseButton}>
-					<Text style={styles.addExerciseText}>Add Exercise</Text>
-				</TouchableOpacity>
-				<View style={styles.divider} />
-				<ExerciseModal
-					isVisible={isExerciseModalVisible}
-					onClose={() => setExerciseModalVisible(false)}
-					availableExercises={availableExercises}
-					addExercise={addExercise}
-					muscleGroups={muscleGroups}
-					handleMuscleGroupSelect={handleMuscleGroupSelect}
-				/>
-			</ScrollView>
-		</SafeAreaView>
+
+					<View style={styles.divider} />
+					{exercises.map((exercise, exerciseIndex) => (
+						<View key={exercise.id} style={styles.exerciseContainer}>
+							<Text style={styles.exerciseTitle}>{exercise.name.toUpperCase()}</Text>
+							<Text style={styles.exerciseSubtitle}>{exercise.musclegroup.toUpperCase()}</Text>
+							<View style={styles.headerRow}>
+								<Text style={styles.columnHeader}>Set</Text>
+								<Text style={styles.columnHeader}>Lbs</Text>
+								<Text style={styles.columnHeader}>Reps</Text>
+								<Text style={styles.columnHeader}>✓</Text>
+							</View>
+							{exercise.sets.map((set, setIndex) => (
+								<View key={setIndex} style={styles.row}>
+									<View style={styles.cell}>
+										<Text style={styles.cellText}>{set.set}</Text>
+									</View>
+									<View style={styles.cell}>
+										<TextInput
+											style={styles.input}
+											keyboardType="numeric"
+											value={String(set.lbs)}
+											onChangeText={(value) => updateSet(exerciseIndex, setIndex, "lbs", Number(value))}
+										/>
+									</View>
+									<View style={styles.cell}>
+										<TextInput
+											style={styles.input}
+											keyboardType="numeric"
+											value={String(set.reps)}
+											onChangeText={(value) => updateSet(exerciseIndex, setIndex, "reps", Number(value))}
+										/>
+									</View>
+									<View style={styles.cell}>
+										<CheckBox
+											checked={set.completed}
+											onPress={() => {
+												const newCompletedState = !set.completed;
+												updateSet(exerciseIndex, setIndex, "completed", newCompletedState);
+												if (newCompletedState) {
+													// Navigate to the timer page with the exercise and set details
+													router.push({
+														pathname: "/workouts/timer",
+														params: {
+															exerciseId: exercise.id,
+															exerciseName: exercise.name,
+															setNumber: set.set,
+															restTime: set.restTime,
+														},
+													});
+												}
+											}}
+											containerStyle={styles.checkbox}
+											checkedColor={theme.colors.primary}
+											uncheckedColor="#666"
+										/>
+									</View>
+								</View>
+							))}
+							<TouchableOpacity onPress={() => addSet(exerciseIndex)} style={styles.addSetButton}>
+								<Text style={styles.addSetButtonText}>Add Set</Text>
+							</TouchableOpacity>
+						</View>
+					))}
+					<TouchableOpacity onPress={() => setExerciseModalVisible(true)} style={styles.addExerciseButton}>
+						<Text style={styles.addExerciseText}>Add Exercise</Text>
+					</TouchableOpacity>
+					<View style={styles.divider} />
+					<ExerciseModal
+						isVisible={isExerciseModalVisible}
+						onClose={() => setExerciseModalVisible(false)}
+						availableExercises={availableExercises}
+						addExercise={addExercise}
+						muscleGroups={muscleGroups}
+						handleMuscleGroupSelect={handleMuscleGroupSelect}
+					/>
+				</ScrollView>
+			</SafeAreaView>
+		</PageWrapper>
 	);
 };
 
@@ -344,7 +346,6 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		padding: theme.spacing.medium,
-		backgroundColor: theme.colors.background,
 	},
 	topIconContainer: {
 		alignItems: "center",
