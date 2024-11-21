@@ -3,11 +3,11 @@ import { View, SafeAreaView, Text, TextInput, Modal, FlatList, TouchableOpacity,
 import { CheckBox } from "react-native-elements";
 import Icon from "react-native-vector-icons/FontAwesome5";
 import axios from "axios";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { globalStyles } from "../../../assets/styles/globalStyles";
 import { theme } from "../../../assets/styles/theme";
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Alert } from "react-native";
 
 const headerImage = require("../../../assets/images/VigilWeight.png");
 
@@ -37,79 +37,40 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
 	const [isExerciseModalVisible, setExerciseModalVisible] = useState(false);
 	const [availableExercises, setAvailableExercises] = useState<Exercise[]>([]);
 	const [muscleGroups, setMuscleGroups] = useState<string[]>([]);
+	const [workoutName, setWorkoutName] = useState("");
 	const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<string | null>(null);
 
 	useEffect(() => {
-		const fetchInitialData = async () => {
+		const fetchData = async () => {
 			try {
-				const exercisesData = await AsyncStorage.getItem('exercises');
-				if (exercisesData) {
-					const parsedExercises = JSON.parse(exercisesData);
-					console.log("Fetched exercises:", parsedExercises);
+				// Fetch exercises saved in AsyncStorage for the current workout
+				const savedExercises = await AsyncStorage.getItem("exercises");
+				if (savedExercises) {
+					const parsedExercises = JSON.parse(savedExercises);
 					setExercises(parsedExercises);
-
-					return; // Exit early if we have exercises in AsyncStorage
-				} else {
-					console.log("No exercises found in AsyncStorage");
-					const { data } = await axios.get("https://no-pain-no-main.azurewebsites.net/exercises");
-
-					const exercisesWithSets = data.map((exercise: any) => ({
-						...exercise,
-						sets: [{ set: 1, lbs: 0, reps: 0, completed: false, restTime: 120 }],
-					}));
-					setAvailableExercises(exercisesWithSets);
-
-					// Derive unique muscle groups
-					const uniqueMuscleGroups = Array.from(new Set(exercisesWithSets.map((ex) => ex.musclegroup)));
-					setMuscleGroups(uniqueMuscleGroups);
-					return;
 				}
-
+	
+				// Fetch all available exercises from the API
+				const { data } = await axios.get("https://no-pain-no-main.azurewebsites.net/exercises");
+				const exercisesWithSets = data.map((exercise: any) => ({
+					...exercise,
+					sets: [{ set: 1, lbs: 0, reps: 0, completed: false, restTime: 120 }],
+				}));
+	
+				setAvailableExercises(exercisesWithSets);
+	
+				// Derive unique muscle groups
+				const uniqueMuscleGroups = Array.from(new Set(exercisesWithSets.map((ex) => ex.musclegroup)));
+				setMuscleGroups(uniqueMuscleGroups);
 			} catch (error) {
-				console.error("Error fetching exercises from AsyncStorage:", error);
+				console.error("Error fetching exercises:", error);
+				Alert.alert("Error", "Failed to load exercises. Please try again.");
 			}
 		};
-		fetchInitialData();
+	
+		fetchData();
 	}, []);
-
-
-	// useEffect(() => {
-		
-	// 	const fetchInitialData = async () => {
-	// 		try {
-	// 			const exercisesData = await AsyncStorage.getItem('exercises');
-	// 			if (exercisesData) {
-	// 			  //setExercises(JSON.parse(exercisesData));
-	// 			};
-
-	// 			// if (initialExercisesParam) {
-	// 			// 	const parsedExercises = JSON.parse(initialExercisesParam as String);
-	// 			// 	if (Array.isArray(parsedExercises) && parsedExercises.length > 0) {
-	// 			// 		setExercises(parsedExercises);
-
-	// 			// 		return; // Exit early if we have initial exercises
-	// 			// 	}
-	// 			// }
-	// 			// // Fetch all exercises if no initial exercises are provided
-	// 			// const { data } = await axios.get("https://no-pain-no-main.azurewebsites.net/exercises");
-				
-	// 			// const exercisesWithSets = data.map((exercise: any) => ({
-	// 			// 	...exercise,
-	// 			// 	sets: [{ set: 1, lbs: 0, reps: 0, completed: false, restTime: 120 }],
-	// 			// }));
-
-	// 			setAvailableExercises(exercisesWithSets);
-
-	// 			// Derive unique muscle groups
-	// 			const uniqueMuscleGroups = Array.from(new Set(exercisesWithSets.map((ex) => ex.musclegroup)));
-	// 			setMuscleGroups(uniqueMuscleGroups);
-	// 		} catch (error) {
-	// 			console.error("Error fetching exercises:", error);
-	// 		}
-	// 	};
-
-	// 	fetchInitialData();
-	// }, [params]);
+	
 
 	const addExercise = (exercise: Exercise) => {
 		if (exercises.some((e) => e.id === exercise.id)) {
@@ -119,8 +80,6 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
 
 		// Add exercise with its predefined sets
 		setExercises((prevExercises) => [...prevExercises, { ...exercise, sets: exercise.sets }]);
-
-		console.log("Updated exercises state:", exercises);
 		setExerciseModalVisible(false);
 	};
 
@@ -148,6 +107,44 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
 		setSelectedMuscleGroup(muscle);
 	};
 
+	const saveWorkout = async () => {
+		if (!workoutName.trim()) {
+			// Alert the user if the workout name is empty
+			Alert.alert("Error", "Please enter a workout name before saving.");
+			return;
+		}
+		try {
+			// Hardcoded description
+			const workoutDescription = "Custom workout created using the app";
+
+			// Format the exercises to match the API's expected structure
+			const workoutData = {
+				name: workoutName.trim(),
+				description: workoutDescription,
+				exercises: exercises.map((exercise) => ({
+					exerciseid: exercise.id,
+					sets: exercise.sets.length,
+					reps: exercise.sets[0]?.reps || 0,
+					resttime: exercise.sets[0]?.restTime || 60, // Default to 60 seconds if not provided
+				})),
+			};
+			// Send POST request to save the workout
+			const response = await axios.post("https://no-pain-no-main.azurewebsites.net/saveworkout", workoutData);
+
+			// Handle successful response
+			if (response.status === 201) {
+				Alert.alert("Success", "Workout saved successfully!");
+				// Optionally reset workout name or exercises
+				setWorkoutName("");
+			} else {
+				throw new Error("Unexpected response from the server");
+			}
+		} catch (error) {
+			console.error("Error saving workout:", error);
+			Alert.alert("Error", "Failed to save workout. Please try again.");
+		}
+	};
+
 	return (
 		<SafeAreaView style={styles.safeAreaContainer}>
 			<ScrollView style={styles.container}>
@@ -159,8 +156,11 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
 						style={styles.saveExerciseText}
 						placeholder="Enter Workout Name"
 						placeholderTextColor={theme.colors.textSecondary}
+						value={workoutName}
+						onChangeText={setWorkoutName}
 					/>
-					<TouchableOpacity style={styles.saveButton}>
+
+					<TouchableOpacity style={styles.saveButton} onPress={saveWorkout}>
 						<Text style={styles.saveButtonText}>Save</Text>
 					</TouchableOpacity>
 				</View>
@@ -534,12 +534,12 @@ const styles = StyleSheet.create({
 		fontSize: theme.fonts.regular,
 	},
 	inputWithButton: {
-		flexDirection: 'row', // Aligns input and button horizontally
-		alignItems: 'center', // Ensures vertical alignment
-		justifyContent: 'space-between', // Distributes space between input and button
+		flexDirection: "row", // Aligns input and button horizontally
+		alignItems: "center", // Ensures vertical alignment
+		justifyContent: "space-between", // Distributes space between input and button
 		marginBottom: theme.spacing.medium, // Adjust as needed
-		position: 'relative', // Ensures button is within the container but can stay fixed
-		width: '100%', // Ensures it takes full width
+		position: "relative", // Ensures button is within the container but can stay fixed
+		width: "100%", // Ensures it takes full width
 	},
 	saveButton: {
 		marginLeft: 0, // Space between input and button
@@ -561,8 +561,7 @@ const styles = StyleSheet.create({
 	saveButtonText: {
 		color: theme.colors.textPrimary, // Adjust text color
 		fontSize: theme.fonts.regular,
-		fontWeight: 'bold',
-
+		fontWeight: "bold",
 	},
 });
 
