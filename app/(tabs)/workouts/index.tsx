@@ -1,70 +1,105 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Text, StyleSheet, TouchableOpacity, ScrollView, View, SafeAreaView, Image } from "react-native";
-import { RouteParams, useRouter } from "expo-router";
-import { MaterialIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import axios from "axios";
 import { globalStyles } from "../../../assets/styles/globalStyles";
 import { theme } from "../../../assets/styles/theme";
-import axios from "axios";
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const headerImage = require("../../../assets/images/VigilWeight.png");
 
 const Workouts = () => {
+	const router = useRouter();
+	const [workouts, setWorkouts] = useState([]);
+	const [savedWorkouts, setSavedWorkouts] = useState([]);
+
+	// Fetch default workout templates
+	useEffect(() => {
+		const fetchWorkouts = async () => {
+			try {
+				const workoutIds = [1, 2, 3, 4];
+				const workoutPromises = workoutIds.map((id) => axios.get(`https://no-pain-no-main.azurewebsites.net/workout${id}`));
+
+				const workoutResponses = await Promise.all(workoutPromises);
+				const workoutData = workoutResponses.map((res) => res.data);
+				setWorkouts(workoutData);
+			} catch (error) {
+				console.error("Error fetching default workouts:", error);
+			}
+		};
+
+		fetchWorkouts();
+	}, []);
+
+	// Fetch saved workouts
+	useEffect(() => {
+		const fetchSavedWorkouts = async () => {
+			const savedWorkoutData = [];
+			let workoutId = 10;
+
+			while (true) {
+				try {
+					const response = await axios.get(`https://no-pain-no-main.azurewebsites.net/workout${workoutId}`);
+					savedWorkoutData.push(response.data);
+					workoutId++; // Increment ID to fetch the next workout
+				} catch (error) {
+					if (error.response?.status === 403 || error.response?.status === 404) {
+						// Stop fetching when access is denied or the resource is not found
+						break;
+					} else {
+						console.error("Error fetching saved workouts:", error);
+					}
+				}
+			}
+
+			setSavedWorkouts(savedWorkoutData);
+		};
+
+		fetchSavedWorkouts();
+	}, []);
+
 	async function startPredefinedWorkout(workoutId: number) {
 		try {
+			// Fetch workout data
 			const response = await axios.get(`https://no-pain-no-main.azurewebsites.net/workout${workoutId}/exerciseData`);
 
+			// Log the response to ensure correct data is fetched
+			console.log("Fetched workout exercises:", response.data);
+
+			// Map exercises to the expected structure
 			const exercises = response.data.map((exercise: any) => ({
-				id: exercise.exerciseid,  // Ensure you're using the correct field
+				id: exercise.exerciseid,
 				name: exercise.name,
 				description: exercise.description,
 				musclegroup: exercise.musclegroup,
-
-				// Ensure that sets are generated correctly and properly handled
 				sets: Array.from({ length: exercise.sets }).map((_, index) => ({
 					set: index + 1,
 					lbs: 0,
 					reps: exercise.reps,
 					completed: false,
-					restTime: exercise.resttime,  // Make sure the `resttime` is a number (no need for .toString())
+					restTime: exercise.resttime,
 				})),
 			}));
 
-			// Log the exercises to verify the result
-			console.log(JSON.stringify(exercises, null, 2)); // This will give you a more readable output
+			// Log the mapped exercises for verification
+			console.log("Mapped exercises:", exercises);
 
-			// Navigate to the empty-workout page with the predefined exercises
-			await AsyncStorage.setItem('exercises', JSON.stringify(exercises));
+			// Store exercises in AsyncStorage
+			await AsyncStorage.setItem("exercises", JSON.stringify(exercises));
+
+			// Navigate to the empty-workout page
 			router.push({
 				pathname: "../workouts/empty-workout",
-				// params: { initialExercises: exercises },
 			});
-
 		} catch (error) {
 			console.error("Error fetching predefined workout exercises:", error);
 			alert("Failed to load exercises. Please try again.");
 		}
 	}
 
-
-
-	const router = useRouter();
-
-	const [workouts, setWorkouts] = React.useState([
-		{ id: 1, name: "Nov 14 leg" },
-		{ id: 2, name: "demon back day" },
-	]);
-
 	async function startEmptyWorkout() {
-		await AsyncStorage.removeItem('exercises');
+		await AsyncStorage.removeItem("exercises");
 		router.push("../workouts/empty-workout");
-	}
-
-	async function deleteWorkout(workoutId) {
-		const updatedWorkouts = workouts.filter((workout) => workout.id !== workoutId);
-		setWorkouts(updatedWorkouts);
-		console.log(`Deleted workout: ${workoutId}`);
 	}
 
 	return (
@@ -73,35 +108,27 @@ const Workouts = () => {
 				<Image source={headerImage} style={styles.headerImage} />
 
 				<Text style={styles.sectionTitle} numberOfLines={1} ellipsizeMode="tail">
-					Recent Workouts
+					Workout Templates
 				</Text>
 				<View style={styles.gridContainer}>
 					{workouts.map((workout) => (
-						<TouchableOpacity key={workout.id} style={styles.card}>
-							<Text style={styles.cardText}>{workout.name}</Text>
-							<TouchableOpacity style={styles.trashButton} onPress={() => deleteWorkout(workout.id)}>
-								<MaterialIcons name="delete" size={24} color="#fff" />
-							</TouchableOpacity>
+						<TouchableOpacity key={workout.id} style={styles.card} onPress={() => startPredefinedWorkout(workout.id)}>
+							<Text style={styles.cardTitle}>{workout.name}</Text>
+							<Text style={styles.cardDescription}>{workout.description}</Text>
 						</TouchableOpacity>
 					))}
 				</View>
 
 				<Text style={styles.sectionTitle} numberOfLines={1} ellipsizeMode="tail">
-					Workout Templates
+					Saved Workouts
 				</Text>
 				<View style={styles.gridContainer}>
-					<TouchableOpacity style={styles.card} onPress={() => startPredefinedWorkout(2)}>
-						<Text style={styles.cardTitle}>Push</Text>
-						<Text style={styles.cardDescription}>A workout focused on pushing movements, targeting chest, shoulders, and triceps.</Text>
-					</TouchableOpacity>
-					<TouchableOpacity style={styles.card} onPress={() => startPredefinedWorkout(1)}>
-						<Text style={styles.cardTitle}>Pull</Text>
-						<Text style={styles.cardDescription}>A workout that emphasizes pulling movements, focusing on back and biceps.</Text>
-					</TouchableOpacity>
-					<TouchableOpacity style={styles.card} onPress={() => startPredefinedWorkout(3)}>
-						<Text style={styles.cardTitle}>Legs</Text>
-						<Text style={styles.cardDescription}>Leg-focused exercises targeting quads, hamstrings, and calves.</Text>
-					</TouchableOpacity>
+					{savedWorkouts.map((workout) => (
+						<TouchableOpacity key={workout.id} style={styles.card} onPress={() => startPredefinedWorkout(workout.id)}>
+							<Text style={styles.cardTitle}>{workout.name}</Text>
+							<Text style={styles.cardDescription}>{workout.description}</Text>
+						</TouchableOpacity>
+					))}
 				</View>
 
 				<TouchableOpacity style={[styles.button, styles.emptyButton]} onPress={startEmptyWorkout}>
@@ -135,7 +162,7 @@ const styles = StyleSheet.create({
 		fontWeight: "bold",
 		color: theme.colors.textPrimary,
 		marginBottom: theme.spacing.medium,
-		textAlign: "left",
+		textAlign: "center",
 		width: "100%",
 	},
 	gridContainer: {
@@ -155,13 +182,8 @@ const styles = StyleSheet.create({
 		justifyContent: "center",
 		position: "relative",
 	},
-	cardText: {
-		color: theme.colors.textPrimary,
-		fontSize: theme.fonts.regular,
-		textAlign: "left",
-	},
 	cardTitle: {
-		color: theme.colors.textPrimary,
+		color: theme.colors.textSecondary,
 		fontSize: theme.fonts.large,
 		fontWeight: "bold",
 		textAlign: "left",
@@ -171,14 +193,6 @@ const styles = StyleSheet.create({
 		color: theme.colors.textPrimary,
 		fontSize: theme.fonts.regular - 4,
 		textAlign: "left",
-	},
-	trashButton: {
-		position: "absolute",
-		top: theme.spacing.small,
-		right: theme.spacing.small,
-		backgroundColor: theme.colors.background,
-		borderRadius: theme.borderRadius.small,
-		padding: theme.spacing.small / 2,
 	},
 	button: {
 		...globalStyles.button,

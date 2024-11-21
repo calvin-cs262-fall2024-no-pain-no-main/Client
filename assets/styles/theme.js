@@ -30,6 +30,6 @@ export const theme = {
   fonts: {
       regular: 16,
       large: 20,
-      title: 24,
+      title: 28,
   },
 };
