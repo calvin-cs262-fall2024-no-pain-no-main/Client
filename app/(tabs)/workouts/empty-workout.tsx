@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
 	},
 	container: {
 		flex: 1,
-		padding: theme.spacing.medium,
+		padding: theme.spacing.small,
 	},
 	topIconContainer: {
 		alignItems: "center",
@@ -358,7 +358,7 @@ const styles = StyleSheet.create({
 	divider: {
 		height: 1,
 		backgroundColor: theme.colors.primary,
-		opacity: 0.1,
+		opacity: 0,
 	},
 	exerciseContainer: {
 		marginBottom: theme.spacing.medium,
