@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons'; // For icons
-import { globalStyles } from '../../assets/styles/globalStyles';
+import { globalStyles } from '../assets/styles/globalStyles';
 import { theme } from '@/assets/styles/theme';
 
 const SignUp = () => {
@@ -54,7 +54,7 @@ const SignUp = () => {
 
     return (
         <View style={styles.container}>
-            <Image source={require('../../assets/images/VigilFullLogo.png')} style={styles.titleImage} resizeMode='contain' />
+            <Image source={require('../assets/images/VigilFullLogo.png')} style={styles.titleImage} resizeMode='contain' />
 
             {/* Username Input */}
             <View style={styles.inputContainer}>

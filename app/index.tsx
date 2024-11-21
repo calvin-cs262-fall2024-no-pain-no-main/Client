@@ -36,7 +36,7 @@ const Login = () => {
   };
 
   const handleSignUp = () => {
-    router.push('/signup/signup'); // Adjust to your desired route
+    router.push('./signup'); // Adjust to your desired route
   };
 
   const handleAdmin = () => {
