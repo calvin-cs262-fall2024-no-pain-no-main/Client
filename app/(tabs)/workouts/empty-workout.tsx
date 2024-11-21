@@ -8,6 +8,7 @@ import { globalStyles } from "../../../assets/styles/globalStyles";
 import { theme } from "../../../assets/styles/theme";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+
 const headerImage = require("../../../assets/images/VigilWeight.png");
 
 interface Exercise {
