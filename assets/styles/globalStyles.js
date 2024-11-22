@@ -5,7 +5,7 @@ import { theme } from './theme';
 export const globalStyles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: theme.spacing.medium,
+        padding: theme.spacing.small,
         backgroundColor: 'transparent',
         justifyContent: 'center',
         alignItems: 'center',
@@ -17,6 +17,7 @@ export const globalStyles = StyleSheet.create({
     containerWithBackground: {
         flex: 1,
         position: 'relative', 
+        backgroundColor: '#000',
     },
     backgroundImage: {
         position: 'absolute',
@@ -27,6 +28,7 @@ export const globalStyles = StyleSheet.create({
     contentContainer: {
         flex: 1,
         padding: theme.spacing.medium,
+        opacity: 0.8,
     },
     // Existing styles below
     textPrimary: {
@@ -86,7 +88,7 @@ export const globalStyles = StyleSheet.create({
     modalContainer: {
         width: '90%',
         height: '90%',
-        backgroundColor: theme.colors.modalBackground,
+        backgroundColor: theme.colors.cardBackground,
         borderRadius: theme.borderRadius.large,
         padding: theme.spacing.medium,
         shadowColor: '#000',
@@ -104,7 +106,7 @@ export const globalStyles = StyleSheet.create({
     card: {
         width: '48%',
         backgroundColor: theme.colors.cardBackground,
-        padding: theme.spacing.medium,
+        padding: theme.spacing.small,
         marginBottom: theme.spacing.medium,
         borderRadius: theme.borderRadius.medium,
         alignItems: 'flex-start',

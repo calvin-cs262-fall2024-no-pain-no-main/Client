@@ -5,7 +5,7 @@ import axios from "axios";
 import { globalStyles } from "../../../assets/styles/globalStyles";
 import { theme } from "../../../assets/styles/theme";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import PageWrapper from "../../../assets/styles/pageWrapper";
+import PageWrapper from "../../../components/pageWrapper";
 
 const headerImage = require("../../../assets/images/VigilWeight.png");
 
@@ -105,39 +105,43 @@ const Workouts = () => {
 
 	return (
 		<PageWrapper>
-		<SafeAreaView style={styles.safeArea}>
-			<ScrollView style={styles.scrollView} contentContainerStyle={styles.contentContainer}showsHorizontalScrollIndicator = {false} showsVerticalScrollIndicator = {false}>
-				<Image source={headerImage} style={styles.headerImage} />
+			<SafeAreaView style={styles.safeArea}>
+				<ScrollView
+					style={styles.scrollView}
+					contentContainerStyle={styles.contentContainer}
+					showsHorizontalScrollIndicator={false}
+					showsVerticalScrollIndicator={false}>
+					<Image source={headerImage} style={styles.headerImage} />
 
-				<Text style={styles.sectionTitle} numberOfLines={1} ellipsizeMode="tail">
-					Workout Templates
-				</Text>
-				<View style={styles.gridContainer}>
-					{workouts.map((workout) => (
-						<TouchableOpacity key={workout.id} style={styles.card} onPress={() => startPredefinedWorkout(workout.id)}>
-							<Text style={styles.cardTitle}>{workout.name}</Text>
-							<Text style={styles.cardDescription}>{workout.description}</Text>
-						</TouchableOpacity>
-					))}
-				</View>
+					<Text style={styles.sectionTitle} numberOfLines={1} ellipsizeMode="tail">
+						Workout Templates
+					</Text>
+					<View style={styles.gridContainer}>
+						{workouts.map((workout) => (
+							<TouchableOpacity key={workout.id} style={styles.card} onPress={() => startPredefinedWorkout(workout.id)}>
+								<Text style={styles.cardTitle}>{workout.name}</Text>
+								<Text style={styles.cardDescription}>{workout.description}</Text>
+							</TouchableOpacity>
+						))}
+					</View>
 
-				<Text style={styles.sectionTitle} numberOfLines={1} ellipsizeMode="tail">
-					Saved Workouts
-				</Text>
-				<View style={styles.gridContainer}>
-					{savedWorkouts.map((workout) => (
-						<TouchableOpacity key={workout.id} style={styles.card} onPress={() => startPredefinedWorkout(workout.id)}>
-							<Text style={styles.cardTitle}>{workout.name}</Text>
-							<Text style={styles.cardDescription}>{workout.description}</Text>
-						</TouchableOpacity>
-					))}
-				</View>
+					<Text style={styles.sectionTitle} numberOfLines={1} ellipsizeMode="tail">
+						Saved Workouts
+					</Text>
+					<View style={styles.gridContainer}>
+						{savedWorkouts.map((workout) => (
+							<TouchableOpacity key={workout.id} style={styles.card} onPress={() => startPredefinedWorkout(workout.id)}>
+								<Text style={styles.cardTitle}>{workout.name}</Text>
+								<Text style={styles.cardDescription}>{workout.description}</Text>
+							</TouchableOpacity>
+						))}
+					</View>
 
-				<TouchableOpacity style={[styles.button, styles.emptyButton]} onPress={startEmptyWorkout}>
-					<Text style={styles.emptyButtonText}>Create Empty Workout</Text>
-				</TouchableOpacity>
-			</ScrollView>
-		</SafeAreaView>
+					<TouchableOpacity style={[styles.button, styles.emptyButton]} onPress={startEmptyWorkout}>
+						<Text style={styles.emptyButtonText}>Create Empty Workout</Text>
+					</TouchableOpacity>
+				</ScrollView>
+			</SafeAreaView>
 		</PageWrapper>
 	);
 };

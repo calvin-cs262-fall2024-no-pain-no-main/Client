@@ -4,7 +4,7 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons"; // For icons
 import { globalStyles } from "../assets/styles/globalStyles";
 import { theme } from "@/assets/styles/theme";
-import PageWrapper from "../assets/styles/pageWrapper";
+import PageWrapper from "../components/pageWrapper";
 const Login = () => {
 	const [username, setUsername] = useState("");
 	const [password, setPassword] = useState("");

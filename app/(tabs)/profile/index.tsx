@@ -5,7 +5,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { useRouter } from "expo-router";
 import { globalStyles } from "@/assets/styles/globalStyles";
 import { theme } from "@/assets/styles/theme";
-import PageWrapper from "@/assets/styles/pageWrapper";
+import PageWrapper from "@/components/pageWrapper";
 
 export default function Profile() {
 	const router = useRouter();
