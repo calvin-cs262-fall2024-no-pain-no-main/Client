@@ -17,6 +17,7 @@ export const globalStyles = StyleSheet.create({
     containerWithBackground: {
         flex: 1,
         position: 'relative', 
+        backgroundColor: '#000',
     },
     backgroundImage: {
         position: 'absolute',

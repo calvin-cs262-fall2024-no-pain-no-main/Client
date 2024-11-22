@@ -8,7 +8,7 @@ import { globalStyles } from "../../../assets/styles/globalStyles";
 import { theme } from "../../../assets/styles/theme";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert } from "react-native";
-import PageWrapper from "../../../assets/styles/pageWrapper";
+import PageWrapper from "../../../components/pageWrapper";
 
 const headerImage = require("../../../assets/images/VigilWeight.png");
 
@@ -148,7 +148,7 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
 	return (
 		<PageWrapper>
 			<SafeAreaView style={styles.safeAreaContainer}>
-				<ScrollView style={styles.container} showsHorizontalScrollIndicator = {false} showsVerticalScrollIndicator = {false}>
+				<ScrollView style={styles.container} showsHorizontalScrollIndicator={false} showsVerticalScrollIndicator={false}>
 					<View style={styles.topIconContainer}>
 						<Image source={headerImage} style={styles.headerImage} />
 					</View>

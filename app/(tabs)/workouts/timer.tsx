@@ -4,7 +4,7 @@ import { useRouter } from "expo-router";
 import axios from "axios";
 import { globalStyles } from "../../../assets/styles/globalStyles";
 import { theme } from "../../../assets/styles/theme";
-import PageWrapper from "@/assets/styles/pageWrapper";
+import PageWrapper from "@/components/pageWrapper";
 
 const TimerPage: React.FC = () => {
 	const router = useRouter();
