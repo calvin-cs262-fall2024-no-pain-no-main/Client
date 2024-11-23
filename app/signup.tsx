@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons"; // For icons
 import { globalStyles } from "../assets/styles/globalStyles";
 import { theme } from "@/assets/styles/theme";
 import PageWrapper from "../components/pageWrapper";
+import VigilFullLogo from "../assets/images/VigilFullLogo.png";
 
 const SignUp = () => {
 	const [username, setUsername] = useState("");
@@ -56,7 +57,8 @@ const SignUp = () => {
 	return (
 		<PageWrapper>
 			<View style={styles.container}>
-				<Image source={require("../assets/images/VigilFullLogo.png")} style={styles.titleImage} resizeMode="contain" />
+				<Image source={VigilFullLogo} style={styles.titleImage} resizeMode="contain" />
+
 
 				{/* Username Input */}
 				<View style={styles.inputContainer}>
