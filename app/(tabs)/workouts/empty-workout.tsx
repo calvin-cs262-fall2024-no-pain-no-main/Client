@@ -39,7 +39,7 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
 	const [availableExercises, setAvailableExercises] = useState<Exercise[]>([]);
 	const [muscleGroups, setMuscleGroups] = useState<string[]>([]);
 	const [workoutName, setWorkoutName] = useState("");
-	const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<string | null>(null);
+	const [ setSelectedMuscleGroup] = useState<string | null>(null);
 
 	useEffect(() => {
 		const fetchData = async () => {
