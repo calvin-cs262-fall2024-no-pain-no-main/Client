@@ -1,6 +1,6 @@
 // src/components/PageWrapper.js
 import React, { useState } from "react";
-import { Image, View, StyleSheet, Animated } from "react-native";
+import { View, StyleSheet, Animated } from "react-native";
 import { theme } from "../assets/styles/theme";
 
 const PageWrapper = ({ children }) => {
