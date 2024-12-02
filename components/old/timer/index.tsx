@@ -1,7 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import { CountdownCircleTimer } from 'react-native-countdown-circle-timer';
-import { Picker } from '@react-native-picker/picker';
+import React, { useState, useEffect, useRef } from "react";
+import {
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+} from "react-native";
+import { CountdownCircleTimer } from "react-native-countdown-circle-timer";
+import { Picker } from "@react-native-picker/picker";
 
 export default function Timer() {
   const [isRunning, setIsRunning] = useState(false); // Timer state (running or not)
@@ -23,12 +29,12 @@ export default function Timer() {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
-        }
-        return () => {
+    }
+    return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
-        };
+    };
   }, [isRunning, remainingTime]);
 
   // Function to start the timer
@@ -47,7 +53,7 @@ export default function Timer() {
 
   // Function to handle time input change
   const handleTimeChange = () => {
-    let newTime = parseInt(minutes * 60) + parseInt(seconds);
+    const newTime = parseInt(minutes * 60) + parseInt(seconds);
     setRemainingTime(newTime);
     setInitialTime(newTime);
     setIsEditing(false);
@@ -73,7 +79,11 @@ export default function Timer() {
               onValueChange={(itemValue) => setMinutes(itemValue)}
             >
               {[...Array(6).keys()].map((i) => (
-                <Picker.Item key={`min-${i}`} label={`${i.toString().padStart(2, '0')}`} value={i} />
+                <Picker.Item
+                  key={`min-${i}`}
+                  label={`${i.toString().padStart(2, "0")}`}
+                  value={i}
+                />
               ))}
             </Picker>
           </View>
@@ -86,7 +96,11 @@ export default function Timer() {
               onValueChange={(itemValue) => setSeconds(itemValue)}
             >
               {[0, 15, 30, 45].map((i) => (
-                <Picker.Item key={`sec-${i}`} label={`${i.toString().padStart(2, '0')}`} value={i} />
+                <Picker.Item
+                  key={`sec-${i}`}
+                  label={`${i.toString().padStart(2, "0")}`}
+                  value={i}
+                />
               ))}
             </Picker>
           </View>
@@ -95,7 +109,10 @@ export default function Timer() {
           <TouchableOpacity onPress={handleTimeChange} style={styles.button}>
             <Text style={styles.buttonText}>Set Time</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => setIsEditing(false)} style={styles.button}>
+          <TouchableOpacity
+            onPress={() => setIsEditing(false)}
+            style={styles.button}
+          >
             <Text style={styles.buttonText}>Cancel</Text>
           </TouchableOpacity>
         </View>
@@ -110,7 +127,7 @@ export default function Timer() {
         isPlaying={isRunning}
         duration={initialTime}
         initialRemainingTime={remainingTime}
-        colors={['#3498db', '#4dd100', '#F7B801', '#A30000']}
+        colors={["#3498db", "#4dd100", "#F7B801", "#A30000"]}
         colorsTime={[initialTime, initialTime * 0.75, initialTime * 0.33, 0]}
         strokeLinecap="round"
         onComplete={() => {
@@ -142,39 +159,41 @@ export default function Timer() {
 const formatTime = (seconds) => {
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
-  return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+  return `${minutes.toString().padStart(2, "0")}:${remainingSeconds
+    .toString()
+    .padStart(2, "0")}`;
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#ecf0f1',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#ecf0f1",
   },
   timerContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'absolute',
+    justifyContent: "center",
+    alignItems: "center",
+    position: "absolute",
   },
   timerText: {
     fontSize: 48,
-    textAlign: 'center',
+    textAlign: "center",
   },
   editText: {
     fontSize: 14,
-    color: '#888',
-    textAlign: 'center',
+    color: "#888",
+    textAlign: "center",
     marginTop: 5,
   },
   timePickerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     marginTop: 20,
   },
   pickerColumn: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   pickerTitle: {
     fontSize: 18,
@@ -191,24 +210,24 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 50,
-    backgroundColor: '#3498db',
+    backgroundColor: "#3498db",
     paddingVertical: 15,
     paddingHorizontal: 40,
     borderRadius: 30,
   },
   buttonText: {
     fontSize: 20,
-    color: '#fff',
-    fontWeight: 'bold',
+    color: "#fff",
+    fontWeight: "bold",
   },
   buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
+    flexDirection: "row",
+    justifyContent: "space-around",
+    width: "100%",
     marginTop: 20,
   },
   startButton: {
-    backgroundColor: '#3498db',
+    backgroundColor: "#3498db",
     paddingVertical: 15,
     paddingHorizontal: 40,
     borderRadius: 30,
