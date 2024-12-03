@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Text, StyleSheet, TouchableOpacity, ScrollView, View, SafeAreaView, Image } from "react-native";
+import { Text, StyleSheet, TouchableOpacity, ScrollView, View, SafeAreaView, Image, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import axios from "axios";
+import { Ionicons } from "@expo/vector-icons";
 import { globalStyles } from "../../../assets/styles/globalStyles";
 import { theme } from "../../../assets/styles/theme";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -64,9 +65,6 @@ const Workouts = () => {
 			// Fetch workout data
 			const response = await axios.get(`https://no-pain-no-main.azurewebsites.net/workout${workoutId}/exerciseData`);
 
-			// Log the response to ensure correct data is fetched
-			console.log("Fetched workout exercises:", response.data);
-
 			// Map exercises to the expected structure
 			const exercises = response.data.map((exercise: any) => ({
 				id: exercise.exerciseid,
@@ -81,9 +79,6 @@ const Workouts = () => {
 					restTime: exercise.resttime,
 				})),
 			}));
-
-			// Log the mapped exercises for verification
-			console.log("Mapped exercises:", exercises);
 
 			// Store exercises in AsyncStorage
 			await AsyncStorage.setItem("exercises", JSON.stringify(exercises));
@@ -103,6 +98,42 @@ const Workouts = () => {
 		router.push("../workouts/empty-workout");
 	}
 
+	// Delete a saved workout
+	async function deleteSavedWorkout(workoutId: number) {
+		try {
+			// Confirm deletion
+			Alert.alert(
+				"Delete Workout",
+				"Are you sure you want to delete this workout?",
+				[
+					{ text: "Cancel", style: "cancel" },
+					{
+						text: "Delete",
+						style: "destructive",
+						onPress: async () => {
+							// Call API to delete workout
+							const response = await axios.delete(`https://no-pain-no-main.azurewebsites.net/deleteworkout`, {
+								data: { workoutId },
+							});
+	
+							if (response.status === 200) {
+								// Remove the workout from state if API call succeeds
+								setSavedWorkouts((prev) => prev.filter((workout) => workout.id !== workoutId));
+								alert("Workout deleted successfully");
+							} else {
+								throw new Error(response.data?.error || "Failed to delete workout.");
+							}
+						},
+					},
+				],
+				{ cancelable: true }
+			);
+		} catch (error) {
+			console.error("Error deleting workout:", error);
+			alert("Failed to delete workout. Please try again.");
+		}
+	}
+
 	return (
 		<PageWrapper>
 			<SafeAreaView style={styles.safeArea}>
@@ -113,9 +144,7 @@ const Workouts = () => {
 					showsVerticalScrollIndicator={false}>
 					<Image source={headerImage} style={styles.headerImage} />
 
-					<Text style={styles.sectionTitle} numberOfLines={1} ellipsizeMode="tail">
-						Workout Templates
-					</Text>
+					<Text style={styles.sectionTitle}>Workout Templates</Text>
 					<View style={styles.gridContainer}>
 						{workouts.map((workout) => (
 							<TouchableOpacity key={workout.id} style={styles.card} onPress={() => startPredefinedWorkout(workout.id)}>
@@ -125,15 +154,20 @@ const Workouts = () => {
 						))}
 					</View>
 
-					<Text style={styles.sectionTitle} numberOfLines={1} ellipsizeMode="tail">
-						Saved Workouts
-					</Text>
+					<Text style={styles.sectionTitle}>Saved Workouts</Text>
 					<View style={styles.gridContainer}>
 						{savedWorkouts.map((workout) => (
-							<TouchableOpacity key={workout.id} style={styles.card} onPress={() => startPredefinedWorkout(workout.id)}>
-								<Text style={styles.cardTitle}>{workout.name}</Text>
-								<Text style={styles.cardDescription}>{workout.description}</Text>
-							</TouchableOpacity>
+							<View key={workout.id} style={styles.card}>
+								<TouchableOpacity onPress={() => startPredefinedWorkout(workout.id)}>
+									<Text style={styles.cardTitle}>{workout.name}</Text>
+									<Text style={styles.cardDescription}>{workout.description}</Text>
+								</TouchableOpacity>
+								<TouchableOpacity
+									onPress={() => deleteSavedWorkout(workout.id)}
+									style={styles.deleteIconContainer}>
+									<Ionicons name="trash-outline" size={24} color="green" />
+								</TouchableOpacity>
+							</View>
 						))}
 					</View>
 
@@ -200,6 +234,15 @@ const styles = StyleSheet.create({
 		color: theme.colors.textPrimary,
 		fontSize: theme.fonts.regular - 4,
 		textAlign: "left",
+	},
+	deleteIconContainer: {
+		position: "absolute",
+		top: theme.spacing.small,
+		right: theme.spacing.small,
+		backgroundColor: "white",
+		padding: 2,
+		borderRadius: 20,
+		elevation: 2,
 	},
 	button: {
 		...globalStyles.button,
