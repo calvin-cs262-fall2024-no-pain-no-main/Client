@@ -6,7 +6,7 @@ import { globalStyles } from "../../../assets/styles/globalStyles";
 import { theme } from "../../../assets/styles/theme";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import PageWrapper from "../../../components/pageWrapper";
-
+// Fixed
 const headerImage = require("../../../assets/images/VigilWeight.png");
 
 const Workouts = () => {
