@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import axios from "axios";
 import { globalStyles } from "../../../assets/styles/globalStyles";
@@ -8,149 +9,210 @@ import PageWrapper from "@/components/pageWrapper";
 
 const TimerPage: React.FC = () => {
 	const router = useRouter();
-	const [timer, setTimer] = useState(45);
+	const [timer, setTimer] = useState<number | null>(null); // Start with `null` to delay countdown
+	const [exerciseName, setExerciseName] = useState("");
+	const [setNumber, setSetNumber] = useState(0);
 	const [quizData, setQuizData] = useState([]);
 	const [currentQuestion, setCurrentQuestion] = useState(null);
 	const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
 	const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
 	const [correctAnswerShown, setCorrectAnswerShown] = useState(false);
 
-	// Fetch quiz data from the API
 	useEffect(() => {
-		const fetchQuizData = async () => {
+		const fetchTimerData = async () => {
 			try {
-				const response = await axios.get("https://no-pain-no-main.azurewebsites.net/quizzes");
-				setQuizData(response.data);
-				setCurrentQuestion(response.data[Math.floor(Math.random() * response.data.length)]);
+				const timerData = await AsyncStorage.getItem("timerData");
+				if (!timerData) {
+					Alert.alert("Error", "No timer data found. Returning to workouts.");
+					router.back();
+					return;
+				}
+				const { exerciseName, setNumber, restTime } = JSON.parse(timerData);
+				setExerciseName(exerciseName);
+				setSetNumber(setNumber);
+				setTimer(restTime); // Set the timer dynamically from restTime
 			} catch (error) {
-				Alert.alert("Error", "Failed to fetch quiz data. Please try again.");
-			}
-		};
-		fetchQuizData();
-	}, []);
-
-	// Timer countdown logic
-	useEffect(() => {
-		let startTime: number;
-		let animationFrameId: number;
-
-		const updateTimer = (timestamp: number) => {
-			if (!startTime) startTime = timestamp;
-			const elapsedTime = (timestamp - startTime) / 1000;
-			const remainingTime = Math.max(45 - elapsedTime, 0);
-			setTimer(remainingTime);
-
-			if (remainingTime > 0) {
-				animationFrameId = requestAnimationFrame(updateTimer);
-			} else {
-				// Navigate back when the timer reaches 0
+				console.error("Error fetching timer data:", error);
+				Alert.alert("Error", "Failed to load timer data. Returning to workouts.");
 				router.back();
 			}
 		};
 
-		animationFrameId = requestAnimationFrame(updateTimer);
-
-		return () => {
-			cancelAnimationFrame(animationFrameId);
-		};
+		fetchTimerData();
 	}, [router]);
 
-	// Handle answer selection
+	useEffect(() => {
+		const fetchQuizData = async () => {
+			try {
+				const response = await axios.get("https://no-pain-no-main.azurewebsites.net/quizzes");
+				const fetchedQuizData = response.data;
+
+				// Randomize options for each question in fetchedQuizData
+				const randomizedQuizData = fetchedQuizData.map((quiz) => {
+					const allOptions = [quiz.correct_answer, ...quiz.incorrect_answers.split(", ")];
+					const shuffledOptions = allOptions.sort(() => Math.random() - 0.5);
+
+					return { ...quiz, options: shuffledOptions }; // Add shuffled options to each question
+				});
+
+				setQuizData(randomizedQuizData); // Store all quiz data
+				setCurrentQuestion(randomizedQuizData[0]); // Set the first question
+			} catch (error) {
+				Alert.alert("Error", "Failed to fetch quiz data. Please try again.");
+			}
+		};
+
+		fetchQuizData();
+	}, []);
+
+	useEffect(() => {
+		if (timer === null) return; // Prevent countdown until timer is initialized
+
+		let interval: NodeJS.Timeout | undefined;
+		if (timer > 0) {
+			interval = setInterval(() => {
+				setTimer((prevTimer) => (prevTimer !== null ? Math.max(prevTimer - 1, 0) : 0));
+			}, 1000);
+		} else if (timer === 0) {
+			Alert.alert("Time's Up!", "Rest time is over. Let's get back to the workout!");
+			router.back();
+		}
+
+		return () => clearInterval(interval);
+	}, [timer, router]);
+
 	const handleAnswerSelect = (answer: string) => {
 		if (!currentQuestion) return;
 		setSelectedAnswer(answer);
-		const correct = answer === currentQuestion.correctanswer;
+		const correct = answer === currentQuestion.correct_answer;
 		setIsCorrect(correct);
 		if (!correct) {
 			setCorrectAnswerShown(true);
 		}
 	};
 
-	// Load the next random question
 	const loadNextQuestion = () => {
-		if (quizData.length > 0) {
-			setCorrectAnswerShown(false);
-			setSelectedAnswer(null);
-			setIsCorrect(null);
-			setTimer(45); // Reset the timer
-			const randomIndex = Math.floor(Math.random() * quizData.length);
-			setCurrentQuestion(quizData[randomIndex]);
-		} else {
+		if (quizData.length === 0) {
 			Alert.alert("No more questions", "Please reload the quiz.");
+			return;
 		}
+
+		// Find the current index of the question
+		const currentIndex = quizData.findIndex((q) => q.question === currentQuestion?.question);
+
+		// Move to the next question, or wrap back to the first one
+		const nextIndex = (currentIndex + 1) % quizData.length;
+		setCurrentQuestion(quizData[nextIndex]); // Set the next question
+
+		// Reset states for the new question
+		setCorrectAnswerShown(false);
+		setSelectedAnswer(null);
+		setIsCorrect(null);
 	};
 
-	if (!currentQuestion) {
+	if (timer === null) {
 		return (
 			<View style={styles.container}>
-				<Text style={styles.loadingText}>Loading quiz...</Text>
+				<Text style={styles.loadingText}>Loading...</Text>
 			</View>
 		);
 	}
 
 	return (
 		<PageWrapper>
-			<View style={styles.container}>
-				<Text style={styles.timer}>{`${Math.floor(timer / 60)}:${String(Math.floor(timer % 60)).padStart(2, "0")}`}</Text>
+			<ScrollView contentContainerStyle={styles.scrollViewContainer}>
+				{/* Exercise Name and Set Number */}
+				<Text style={styles.exerciseTitle}>{exerciseName}</Text>
+				<Text style={styles.setInfo}>Set {setNumber}</Text>
+
+				{/* Timer */}
+				<Text style={styles.timer}>
+					{Math.floor(timer / 60)}:{String(timer % 60).padStart(2, "0")}
+				</Text>
 
 				{/* Custom Progress Bar */}
 				<View style={styles.progressBarContainer}>
-					<View style={[styles.progressBar, { width: `${(timer / 45) * 100}%` }]} />
+					<View style={[styles.progressBar, { width: `${(timer / 120) * 100}%` }]} />
 				</View>
 
-				<Text style={styles.question}>{`Q: ${currentQuestion.question}`}</Text>
+				{/* Quiz */}
+				{currentQuestion && (
+					<>
+						<Text style={styles.question}>{`Q: ${currentQuestion.question}`}</Text>
+						{currentQuestion.options.map((option, index) => (
+							<TouchableOpacity
+								key={index}
+								style={[
+									styles.optionButton,
+									selectedAnswer === option && isCorrect === true && styles.correctOption,
+									selectedAnswer === option && isCorrect === false && styles.incorrectOption,
+									correctAnswerShown && option === currentQuestion.correct_answer && styles.correctOption,
+								]}
+								onPress={() => handleAnswerSelect(option)}
+								disabled={selectedAnswer !== null}>
+								<Text style={styles.optionText}>{option}</Text>
+							</TouchableOpacity>
+						))}
 
-				{/* Render answer options */}
-				{[currentQuestion.correctanswer, ...currentQuestion.incorrectanswers.split(", ")].map((option, index) => (
-					<TouchableOpacity
-						key={index}
-						style={[
-							styles.optionButton,
-							selectedAnswer === option && isCorrect === true && styles.correctOption,
-							selectedAnswer === option && isCorrect === false && styles.incorrectOption,
-							correctAnswerShown && option === currentQuestion.correctanswer && styles.correctOption,
-						]}
-						onPress={() => handleAnswerSelect(option)}
-						disabled={selectedAnswer !== null}>
-						<Text style={styles.optionText}>{option}</Text>
-					</TouchableOpacity>
-				))}
+						{selectedAnswer && (
+							<Text style={styles.feedbackText}>{isCorrect ? `Correct! ${currentQuestion.description}` : `Incorrect! ${currentQuestion.description}`}</Text>
+						)}
 
-				{/* Feedback after selecting an answer */}
-				{selectedAnswer && (
-					<Text style={styles.feedbackText}>{isCorrect ? `Correct! ${currentQuestion.description}` : `Incorrect! ${currentQuestion.description}`}</Text>
+						{selectedAnswer && (
+							<TouchableOpacity style={styles.nextButton} onPress={loadNextQuestion}>
+								<Text style={styles.nextButtonText}>Next Question</Text>
+							</TouchableOpacity>
+						)}
+					</>
 				)}
-
-				{/* Next Question Button */}
-				{selectedAnswer && (
-					<TouchableOpacity style={styles.nextButton} onPress={loadNextQuestion}>
-						<Text style={styles.nextButtonText}>Next Question</Text>
-					</TouchableOpacity>
-				)}
-			</View>
+			</ScrollView>
 		</PageWrapper>
 	);
 };
 
 const styles = StyleSheet.create({
-	container: {
-		...globalStyles.container,
+	scrollViewContainer: {
+		flexGrow: 1,
+		justifyContent: "center",
+		alignItems: "center",
+		paddingHorizontal: theme.spacing.medium,
+		paddingBottom: theme.spacing.large,
 	},
 	loadingText: {
 		fontSize: 18,
 		color: theme.colors.textSecondary,
 	},
-	timer: {
+	exerciseTitle: {
 		fontSize: theme.fonts.title + 5,
 		fontWeight: "bold",
-		color: theme.colors.textSecondary,
+		color: theme.colors.textPrimary,
 		marginBottom: theme.spacing.small,
+		marginTop: theme.spacing.large, // Increased margin from top
+		textAlign: "center",
+	},
+
+	setInfo: {
+		fontSize: theme.fonts.large,
+		color: theme.colors.textSecondary,
+		marginBottom: theme.spacing.medium,
+	},
+	timer: {
+		fontSize: theme.fonts.title + 10,
+		fontWeight: "bold",
+		color: theme.colors.primary,
+		marginBottom: theme.spacing.medium,
 	},
 	progressBarContainer: {
-		...globalStyles.progressBarContainer,
+		width: "80%",
+		height: 10,
+		backgroundColor: "black",
+		borderRadius: 5,
+		overflow: "hidden",
+		marginBottom: theme.spacing.large,
 	},
 	progressBar: {
-		...globalStyles.progressBar,
+		height: "100%",
+		backgroundColor: theme.colors.primary,
 	},
 	question: {
 		fontSize: theme.fonts.large,
@@ -166,6 +228,7 @@ const styles = StyleSheet.create({
 		fontSize: theme.fonts.regular,
 		color: theme.colors.textPrimary,
 		textAlign: "center",
+		flexWrap: "wrap", // Allow wrapping of long text
 	},
 	correctOption: {
 		...globalStyles.correctOption,
@@ -188,6 +251,17 @@ const styles = StyleSheet.create({
 		fontSize: theme.fonts.regular,
 		fontWeight: "bold",
 		textAlign: "center",
+	},
+	finishButton: {
+		backgroundColor: theme.colors.buttonBackground,
+		padding: theme.spacing.small,
+		borderRadius: theme.borderRadius.medium,
+		alignItems: "center",
+	},
+	finishButtonText: {
+		fontSize: theme.fonts.regular,
+		color: theme.colors.textPrimary,
+		fontWeight: "bold",
 	},
 });
 
