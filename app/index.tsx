@@ -57,13 +57,14 @@ const Login = () => {
 							exercise_id: exercise.exercise_id,
 							performanceData: {
 								sets: [
-									{ set: 1, reps: 8, weight: 50, time: 60 },
-									{ set: 2, reps: 8, weight: 50, time: 70 },
-									{ set: 3, reps: 8, weight: 50, time: 80 },
+									{ set: 1, reps: 8, weight: 0, time: 60 },
+									{ set: 2, reps: 8, weight: 0, time: 70 },
+									{ set: 3, reps: 8, weight: 0, time: 80 },
 								],
 							},
 						}));
-
+						// log formatted exercises
+						console.log("formatted exercises", formattedExercises);
 						// Save workout for the user
 						const saveResponse = await fetch("https://no-pain-no-main.azurewebsites.net/saveworkout", {
 							method: "POST",

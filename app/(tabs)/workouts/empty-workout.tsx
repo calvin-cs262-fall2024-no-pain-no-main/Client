@@ -127,33 +127,60 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
 	};
 
 	const saveWorkout = async () => {
+		console.log("Exercises state before processing:", exercises);
+
 		if (!workoutName.trim()) {
 			Alert.alert("Error", "Please enter a workout name before saving.");
 			return;
 		}
+
 		try {
 			const workoutDescription = "Custom workout created using the app";
 
+			// Fetch userId from AsyncStorage
 			const userId = await AsyncStorage.getItem("userId");
-			if (!userId) throw new Error("User ID not found");
+			if (!userId) {
+				throw new Error("User ID not found");
+			}
 
+			// Prepare the workout data
 			const workoutData = {
 				name: workoutName.trim(),
 				description: workoutDescription,
 				userId: parseInt(userId, 10),
-				exercises: exercises.map((exercise) => ({
-					exercise_id: exercise.id,
-					performanceData: {
-						reps: exercise.sets[0]?.reps || 0,
-						sets: exercise.sets.length,
-						weight: exercise.sets[0]?.lbs || 0,
-					},
-				})),
+				exercises: exercises.map((exercise) => {
+					if (!exercise.sets || exercise.sets.length === 0) {
+						console.error(`Exercise ${exercise.id} has invalid or missing sets.`);
+					}
+
+					// Build performance data
+					const performanceData = exercise.sets.map((set, index) => ({
+						set: index + 1, // Ensure set numbers start at 1
+						reps: set.reps || 0, // Default to 0 reps
+						weight: set.lbs || 0, // Default to 0 lbs
+						time: set.restTime || 0, // Default to 0 seconds rest
+					}));
+
+					return {
+						exercise_id: exercise.id,
+						performance_data: { sets: performanceData }, // Ensure performance_data wraps sets
+					};
+				}),
 			};
 
-			const response = await axios.post("https://no-pain-no-main.azurewebsites.net/saveworkout", workoutData);
+			console.log("Workout data being sent:", JSON.stringify(workoutData));
 
-			if (response.status === 201) {
+			// Make the API request to save the workout
+			const response = await fetch("https://no-pain-no-main.azurewebsites.net/saveworkout", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify(workoutData), // Stringify the workoutData before sending
+			});
+
+			// Handle the response
+			if (response.ok) {
 				Alert.alert("Success", "Workout saved successfully!");
 
 				// Set a flag in AsyncStorage to indicate that the workouts need to be reloaded
@@ -162,10 +189,12 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
 				// Navigate back to the workouts page
 				router.push("../workouts");
 			} else {
-				throw new Error("Unexpected response from the server");
+				const errorData = await response.json(); // Parse error response
+				console.error("Error response:", errorData);
+				throw new Error(errorData.error || "Unexpected response from the server");
 			}
 		} catch (error) {
-			console.error("Error saving workout:", error);
+			console.error("Error saving workout:", error.message);
 			Alert.alert("Error", "Failed to save workout. Please try again.");
 		}
 	};

@@ -47,33 +47,46 @@ const Workouts = () => {
 
 	// Start a preloaded workout
 	const startWorkout = async (exercises) => {
-    try {
-        // Map exercises for AsyncStorage
-        const mappedExercises = exercises.map((exercise) => ({
-            id: exercise.exercise_id,
-            name: `Exercise ${exercise.exercise_id}`, // Placeholder for exercise name
-            description: `Description for ${exercise.exercise_id}`, // Placeholder for description
-            muscle_group: "Muscle Group", // Placeholder for muscle group
-            sets: exercise.performanceData.sets.map((set) => ({
-                set: set.set,
-                reps: set.reps,
-                lbs: set.weight,
-                restTime: set.time,
-                completed: false,
-            })),
-        }));
+		try {
+			// Validate exercises is defined and an array
+			if (!exercises || !Array.isArray(exercises)) {
+				throw new Error("Invalid or undefined exercises data.");
+			}
 
-        // Store workout details in AsyncStorage
-        await AsyncStorage.setItem("exercises", JSON.stringify(mappedExercises));
+			// Map exercises for AsyncStorage
+			const mappedExercises = exercises.map((exercise) => {
+				const { performance_data } = exercise;
 
-        // Navigate to the `empty-workout` page
-        router.push("../workouts/empty-workout");
-    } catch (error) {
-        console.error("Error starting workout:", error);
-        Alert.alert("Error", "Failed to start workout. Please try again.");
-    }
-};
+				// Ensure performance_data and its sets are valid
+				if (!performance_data || !Array.isArray(performance_data.sets)) {
+					throw new Error(`Invalid performance_data for exercise_id ${exercise.exercise_id}`);
+				}
 
+				return {
+					id: exercise.exercise_id,
+					name: `Exercise ${exercise.exercise_id}`, // Placeholder for exercise name
+					description: `Description for ${exercise.exercise_id}`, // Placeholder for description
+					muscle_group: "Muscle Group", // Placeholder for muscle group
+					sets: performance_data.sets.map((set) => ({
+						set: set.set,
+						reps: set.reps,
+						lbs: set.weight,
+						restTime: set.time,
+						completed: false,
+					})),
+				};
+			});
+
+			// Store workout details in AsyncStorage
+			await AsyncStorage.setItem("exercises", JSON.stringify(mappedExercises));
+
+			// Navigate to the `empty-workout` page
+			router.push("../workouts/empty-workout");
+		} catch (error) {
+			console.error("Error starting workout:", error);
+			Alert.alert("Error", error.message || "Failed to start workout. Please try again.");
+		}
+	};
 
 	// Start an empty workout
 	const startEmptyWorkout = async () => {
@@ -137,7 +150,7 @@ const Workouts = () => {
 					<Text style={styles.sectionTitle}>Workout Templates</Text>
 					<View style={styles.gridContainer}>
 						{defaultWorkouts.map((workout) => (
-							<TouchableOpacity key={workout.id} style={styles.card} onPress={() => startWorkout(workout.id, workout.exercises)}>
+							<TouchableOpacity key={workout.id} style={styles.card} onPress={() => startWorkout(workout.exercises)}>
 								<Text style={styles.cardTitle}>{workout.name}</Text>
 								<Text style={styles.cardDescription}>{workout.description}</Text>
 							</TouchableOpacity>
@@ -151,7 +164,7 @@ const Workouts = () => {
 							<View style={styles.gridContainer}>
 								{customWorkouts.map((workout) => (
 									<View key={workout.id} style={styles.card}>
-										<TouchableOpacity onPress={() => startWorkout(workout.id, workout.exercises)}>
+										<TouchableOpacity onPress={() => startWorkout(workout.exercises)}>
 											<Text style={styles.cardTitle}>{workout.name}</Text>
 											<Text style={styles.cardDescription}>{workout.description}</Text>
 										</TouchableOpacity>
