@@ -16,7 +16,7 @@ interface Exercise {
 	id: number;
 	description: string;
 	name: string;
-	musclegroup: string;
+	muscle_group: string;
 	sets: Set[];
 }
 
@@ -46,14 +46,33 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
 			try {
 				// Fetch exercises saved in AsyncStorage for the current workout
 				const savedExercises = await AsyncStorage.getItem("exercises");
-				if (savedExercises) {
-					const parsedExercises = JSON.parse(savedExercises);
-					setExercises(parsedExercises);
-				}
+				let parsedExercises = savedExercises ? JSON.parse(savedExercises) : [];
 
 				// Fetch all available exercises from the API
-				const { data } = await axios.get("https://no-pain-no-main.azurewebsites.net/exercises");
-				const exercisesWithSets = data.map((exercise: any) => ({
+				const { data: allExercises } = await axios.get("https://no-pain-no-main.azurewebsites.net/exercises");
+
+				// Create a map for quick lookup of exercise details
+				const exerciseMap = allExercises.reduce((map: Record<number, any>, exercise: any) => {
+					map[exercise.id] = {
+						name: exercise.name,
+						description: exercise.description,
+						muscle_group: exercise.muscle_group,
+					};
+					return map;
+				}, {});
+
+				// Enrich saved exercises with full details from the exerciseMap
+				parsedExercises = parsedExercises.map((exercise: any) => ({
+					...exercise,
+					name: exerciseMap[exercise.id]?.name || `Exercise ${exercise.id}`,
+					description: exerciseMap[exercise.id]?.description || "No description available",
+					muscle_group: exerciseMap[exercise.id]?.muscle_group || "Unknown",
+				}));
+
+				setExercises(parsedExercises);
+
+				// Populate available exercises for adding to the workout
+				const exercisesWithSets = allExercises.map((exercise: any) => ({
 					...exercise,
 					sets: [{ set: 1, lbs: 0, reps: 0, completed: false, restTime: 120 }],
 				}));
@@ -61,7 +80,7 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
 				setAvailableExercises(exercisesWithSets);
 
 				// Derive unique muscle groups
-				const uniqueMuscleGroups = Array.from(new Set(exercisesWithSets.map((ex) => ex.musclegroup)));
+				const uniqueMuscleGroups = Array.from(new Set(allExercises.map((ex: any) => ex.muscle_group)));
 				setMuscleGroups(uniqueMuscleGroups);
 			} catch (error) {
 				console.error("Error fetching exercises:", error);
@@ -108,40 +127,55 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
 	};
 
 	const saveWorkout = async () => {
-		if (!workoutName.trim()) {
-			// Alert the user if the workout name is empty
-			Alert.alert("Error", "Please enter a workout name before saving.");
+		if (!workoutName || exercises.length === 0) {
+			Alert.alert("Error", "Please provide a workout name and add at least one exercise.");
 			return;
 		}
-		try {
-			// Hardcoded description
-			const workoutDescription = "Custom workout created using the app";
 
-			// Format the exercises to match the API's expected structure
+		const workoutDescription = "A workout created in the app"; // You can make this dynamic or static
+
+		try {
+			const userId = await AsyncStorage.getItem("userId");
+			if (!userId) {
+				Alert.alert("Error", "User ID not found. Please log in again.");
+				return;
+			}
+
+			// Prepare the data for the API
 			const workoutData = {
-				name: workoutName.trim(),
+				name: workoutName,
 				description: workoutDescription,
+				userId: parseInt(userId, 10), // Ensure userId is sent as a number
 				exercises: exercises.map((exercise) => ({
-					exerciseid: exercise.id,
-					sets: exercise.sets.length,
-					reps: exercise.sets[0]?.reps || 0,
-					resttime: exercise.sets[0]?.restTime || 60, // Default to 60 seconds if not provided
+					exercise_id: exercise.id,
+					performanceData: {
+						sets: exercise.sets.map((set) => ({
+							set: set.set,
+							reps: set.reps,
+							time: set.restTime,
+							weight: set.lbs,
+						})),
+					},
 				})),
 			};
-			// Send POST request to save the workout
+
+			// Send POST request to the saveWorkout endpoint
 			const response = await axios.post("https://no-pain-no-main.azurewebsites.net/saveworkout", workoutData);
 
-			// Handle successful response
 			if (response.status === 201) {
 				Alert.alert("Success", "Workout saved successfully!");
-				// Optionally reset workout name or exercises
-				setWorkoutName("");
+
+				// Set the reload flag for workout fetching
+				await AsyncStorage.setItem("workoutsReload", "true");
+
+				// Navigate back to the Workouts page
+				router.replace("/workouts");
 			} else {
-				throw new Error("Unexpected response from the server");
+				Alert.alert("Error", response.data.error || "Failed to save the workout.");
 			}
 		} catch (error) {
 			console.error("Error saving workout:", error);
-			Alert.alert("Error", "Failed to save workout. Please try again.");
+			Alert.alert("Error", "Something went wrong while saving the workout.");
 		}
 	};
 
@@ -170,7 +204,7 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
 					{exercises.map((exercise, exerciseIndex) => (
 						<View key={exercise.id} style={styles.exerciseContainer}>
 							<Text style={styles.exerciseTitle}>{exercise.name.toUpperCase()}</Text>
-							<Text style={styles.exerciseSubtitle}>{exercise.musclegroup.toUpperCase()}</Text>
+							<Text style={styles.exerciseSubtitle}>{exercise.muscle_group.toUpperCase()}</Text>
 							<View style={styles.headerRow}>
 								<Text style={styles.columnHeader}>Set</Text>
 								<Text style={styles.columnHeader}>Lbs</Text>
@@ -204,17 +238,25 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
 											onPress={() => {
 												const newCompletedState = !set.completed;
 												updateSet(exerciseIndex, setIndex, "completed", newCompletedState);
+
 												if (newCompletedState) {
-													// Navigate to the timer page with the exercise and set details
-													router.push({
-														pathname: "/workouts/timer",
-														params: {
-															exerciseId: exercise.id,
-															exerciseName: exercise.name,
-															setNumber: set.set,
-															restTime: set.restTime,
-														},
-													});
+													// Store exercise details in AsyncStorage
+													const timerData = {
+														exerciseId: exercise.id,
+														exerciseName: exercise.name,
+														setNumber: set.set,
+														restTime: set.restTime,
+													};
+
+													AsyncStorage.setItem("timerData", JSON.stringify(timerData))
+														.then(() => {
+															// Navigate to the timer page
+															router.push("/workouts/timer");
+														})
+														.catch((error) => {
+															console.error("Error saving timer data:", error);
+															Alert.alert("Error", "Failed to start the timer. Please try again.");
+														});
 												}
 											}}
 											containerStyle={styles.checkbox}
@@ -255,7 +297,7 @@ const ExerciseModal = ({ isVisible, onClose, availableExercises, addExercise, mu
 	// Filter exercises based on the search query and selected muscle group
 	const filteredExercises = availableExercises.filter((exercise) => {
 		const matchesSearch = exercise.name.toLowerCase().includes(searchQuery.toLowerCase());
-		const matchesMuscleGroup = selectedMuscleGroup ? exercise.musclegroup === selectedMuscleGroup : true;
+		const matchesMuscleGroup = selectedMuscleGroup ? exercise.muscle_group === selectedMuscleGroup : true;
 		return matchesSearch && matchesMuscleGroup;
 	});
 
@@ -302,7 +344,7 @@ const ExerciseModal = ({ isVisible, onClose, availableExercises, addExercise, mu
 						renderItem={({ item }) => (
 							<TouchableOpacity onPress={() => addExercise(item)} style={styles.modalItem}>
 								<Text style={styles.modalItemText}>
-									{item.name} ({item.musclegroup})
+									{item.name} ({item.muscle_group})
 								</Text>
 							</TouchableOpacity>
 						)}
