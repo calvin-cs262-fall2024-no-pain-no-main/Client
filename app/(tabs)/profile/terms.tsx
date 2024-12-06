@@ -1,11 +1,12 @@
 import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
+import PageWrapper from '@/components/pageWrapper'
 
 const terms = () => {
     return (
-        <View>
-            <Text>terms</Text>
-        </View>
+<PageWrapper>
+    <Text>Test Background</Text>
+</PageWrapper>
     )
 }
 
