@@ -55,7 +55,6 @@ const SignUp = () => {
 	};
 
 	return (
-		<PageWrapper>
 			<View style={styles.container}>
 				<Image source={VigilFullLogo} style={styles.titleImage} resizeMode="contain" />
 
@@ -105,7 +104,6 @@ const SignUp = () => {
 					</TouchableOpacity>
 				</View>
 			</View>
-		</PageWrapper>
 	);
 };
 
