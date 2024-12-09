@@ -7,7 +7,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { globalStyles } from "../../../assets/styles/globalStyles";
 import { theme } from "../../../assets/styles/theme";
 import PageWrapper from "../../../components/pageWrapper";
-
+// Fixed
 const headerImage = require("../../../assets/images/VigilWeight.png");
 
 const Workouts = () => {
