@@ -46,7 +46,8 @@ const Workouts = () => {
 	}, []);
 
 	// Start a preloaded workout
-	const startWorkout = async (exercises) => {
+	// Start a preloaded workout
+	const startWorkout = async (exercises, workoutId) => {
 		try {
 			// Validate exercises is defined and an array
 			if (!exercises || !Array.isArray(exercises)) {
@@ -77,8 +78,9 @@ const Workouts = () => {
 				};
 			});
 
-			// Store workout details in AsyncStorage
+			// Store workout details and workoutId in AsyncStorage
 			await AsyncStorage.setItem("exercises", JSON.stringify(mappedExercises));
+			await AsyncStorage.setItem("currentWorkoutId", workoutId.toString());
 
 			// Navigate to the `empty-workout` page
 			router.push("../workouts/empty-workout");
@@ -150,7 +152,7 @@ const Workouts = () => {
 					<Text style={styles.sectionTitle}>Workout Templates</Text>
 					<View style={styles.gridContainer}>
 						{defaultWorkouts.map((workout) => (
-							<TouchableOpacity key={workout.id} style={styles.card} onPress={() => startWorkout(workout.exercises)}>
+							<TouchableOpacity key={workout.id} style={styles.card} onPress={() => startWorkout(workout.exercises, workout.id)}>
 								<Text style={styles.cardTitle}>{workout.name}</Text>
 								<Text style={styles.cardDescription}>{workout.description}</Text>
 							</TouchableOpacity>
@@ -164,7 +166,7 @@ const Workouts = () => {
 							<View style={styles.gridContainer}>
 								{customWorkouts.map((workout) => (
 									<View key={workout.id} style={styles.card}>
-										<TouchableOpacity onPress={() => startWorkout(workout.exercises)}>
+										<TouchableOpacity key={workout.id} style={styles.card} onPress={() => startWorkout(workout.exercises, workout.id)}>
 											<Text style={styles.cardTitle}>{workout.name}</Text>
 											<Text style={styles.cardDescription}>{workout.description}</Text>
 										</TouchableOpacity>

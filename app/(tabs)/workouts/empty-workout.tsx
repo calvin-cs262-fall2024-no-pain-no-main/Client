@@ -178,6 +178,52 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
 			Alert.alert("Error", "Something went wrong while saving the workout.");
 		}
 	};
+	const completeWorkout = async () => {
+		const workoutId = await AsyncStorage.getItem("currentWorkoutId"); // Retrieve the workoutId
+		const userId = await AsyncStorage.getItem("userId");
+
+		console.log("Update Workout Request:", { userId, workoutId });
+
+		if (!workoutId || !userId) {
+			Alert.alert("Error", "Workout ID or User ID not found. Please try again.");
+			return;
+		}
+
+		try {
+			// Prepare data for updating the workout
+			const updateData = {
+				userId: parseInt(userId, 10),
+				workoutId: parseInt(workoutId, 10),
+				performanceDataToUpdate: exercises.map((exercise) => ({
+					exercise_id: exercise.id,
+					performanceData: exercise.sets.map((set) => ({
+						set: set.set,
+						reps: set.reps,
+						time: set.restTime,
+						weight: set.lbs,
+					})),
+				})),
+			};
+
+			console.log("Data being sent to /updateworkout:", JSON.stringify(updateData, null, 2));
+
+			// Call the API to update the workout
+			const response = await axios.put("https://no-pain-no-main.azurewebsites.net/updateworkout", updateData);
+
+			if (response.status === 200) {
+				Alert.alert("Success", "Workout completed successfully!");
+
+				// Set reload flag and navigate back to Workouts page
+				await AsyncStorage.setItem("workoutsReload", "true");
+				router.replace("/workouts");
+			} else {
+				Alert.alert("Error", response.data.error || "Failed to complete the workout.");
+			}
+		} catch (error) {
+			console.error("Error completing workout:", error);
+			Alert.alert("Error", "Something went wrong while completing the workout.");
+		}
+	};
 
 	return (
 		<PageWrapper>
@@ -273,6 +319,9 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
 					))}
 					<TouchableOpacity onPress={() => setExerciseModalVisible(true)} style={styles.addExerciseButton}>
 						<Text style={styles.addExerciseText}>Add Exercise</Text>
+					</TouchableOpacity>
+					<TouchableOpacity onPress={completeWorkout} style={styles.completeWorkoutButton}>
+						<Text style={styles.completeWorkoutText}>Complete Workout</Text>
 					</TouchableOpacity>
 					<View style={styles.divider} />
 					<ExerciseModal
@@ -605,6 +654,20 @@ const styles = StyleSheet.create({
 		color: theme.colors.textPrimary, // Adjust text color
 		fontSize: theme.fonts.regular,
 		fontWeight: "bold",
+	},
+	completeWorkoutButton: {
+		backgroundColor: theme.colors.buttonBackground, // Use a green or success-themed color
+		padding: theme.spacing.small,
+		borderRadius: theme.borderRadius.medium,
+		alignItems: "center",
+		marginVertical: theme.spacing.medium,
+		width: "80%",
+		alignSelf: "center",
+	},
+	completeWorkoutText: {
+		color: theme.colors.textPrimary,
+		fontWeight: "bold",
+		fontSize: theme.fonts.regular,
 	},
 });
 
