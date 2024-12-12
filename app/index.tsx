@@ -33,14 +33,19 @@ const Login = () => {
 			await AsyncStorage.setItem("userId", userId.toString());
 			console.log("User ID saved to AsyncStorage:", userId);
 
-			// Fetch user's existing workouts
-			const userWorkoutsResponse = await fetch(`https://no-pain-no-main.azurewebsites.net/customworkout${userId}`);
-			const userWorkouts = await userWorkoutsResponse.json();
+			// Check if this is the user's first login
+			const hasLoggedInResponse = await fetch(`https://no-pain-no-main.azurewebsites.net/hasuserloggedin${userId}`);
+			const hasLoggedIn = await hasLoggedInResponse.text();
 
-			// Check if the response is empty or has a "message" field indicating no workouts
-			if (!Array.isArray(userWorkouts) || userWorkouts.length === 0 || userWorkouts.message === "No workouts found for the user") {
-				console.log("User has no workouts, adding default workouts...");
+			if (hasLoggedIn === "false") {
+				console.log("First time login detected, updating status...");
+				// Update has_logged_in to true
+				await fetch(`https://no-pain-no-main.azurewebsites.net/loginfirsttime${userId}`, {
+					method: "PUT",
+				});
 
+				// Add default workouts for the first-time user
+				console.log("Adding default workouts...");
 				const defaultWorkoutIds = [1, 2, 3, 4]; // Example default workout IDs
 				for (const workoutId of defaultWorkoutIds) {
 					try {
@@ -63,8 +68,7 @@ const Login = () => {
 								],
 							},
 						}));
-						// log formatted exercises
-						console.log("formatted exercises", formattedExercises);
+
 						// Save workout for the user
 						const saveResponse = await fetch("https://no-pain-no-main.azurewebsites.net/saveworkout", {
 							method: "POST",
@@ -72,8 +76,9 @@ const Login = () => {
 								"Content-Type": "application/json",
 							},
 							body: JSON.stringify({
-								name: templateData.name, // Use fetched name
-								description: templateData.description, // Use fetched description
+								name: templateData.name,
+								description: templateData.description,
+								isPublic: true,
 								exercises: formattedExercises,
 								userId,
 							}),
@@ -89,7 +94,7 @@ const Login = () => {
 					}
 				}
 			} else {
-				console.log("User already has workouts, skipping default workouts.");
+				console.log("User has logged in before, skipping default workouts.");
 			}
 
 			// Navigate to the workouts page
