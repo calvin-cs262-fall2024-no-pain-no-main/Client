@@ -37,7 +37,4 @@ export const theme = {
       large: 20,
       title: 28,
   },
-  fontFamily: {
-      primary: './assets/fonts/Roboto-Regular.ttf',
-  }
 };

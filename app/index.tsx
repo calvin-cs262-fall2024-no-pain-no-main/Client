@@ -93,12 +93,14 @@ const Login = () => {
 						console.error(`Error fetching or saving workout ${workoutId}:`, error);
 					}
 				}
+				router.push("./wizard");
+				return;
 			} else {
 				console.log("User has logged in before, skipping default workouts.");
+				router.push(`/workouts`);
 			}
 
 			// Navigate to the workouts page
-			router.push(`/workouts`);
 		} catch (error) {
 			console.error("Error logging in:", error);
 			Alert.alert("Login Failed :(", error.message);

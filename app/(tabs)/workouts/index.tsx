@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Text, StyleSheet, TouchableOpacity, ScrollView, View, SafeAreaView, Image, Alert, Modal } from "react-native"; 
+import { Text, StyleSheet, TouchableOpacity, ScrollView, View, SafeAreaView, Image, Alert, Modal, TextInput } from "react-native";
 import { useRouter } from "expo-router";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { globalStyles } from "../../../assets/styles/globalStyles";
 import { theme } from "../../../assets/styles/theme";
 import PageWrapper from "../../../components/pageWrapper";
+import Icon from "react-native-vector-icons/FontAwesome";
+
 // Fixed
 const headerImage = require("../../../assets/images/VigilWeight.png");
 
@@ -16,6 +18,9 @@ const Workouts = () => {
 	const [customWorkouts, setCustomWorkouts] = useState([]);
 	const [selectedWorkout, setSelectedWorkout] = useState(null); // New state to track selected workout
 	const [isModalVisible, setIsModalVisible] = useState(false); // Modal visibility state
+	const [isRenameModalVisible, setIsRenameModalVisible] = useState(false);
+	const [renameWorkoutName, setRenameWorkoutName] = useState("");
+	const [renameWorkoutDescription, setRenameWorkoutDescription] = useState("");
 
 	// Fetch all workout data on component load
 	useEffect(() => {
@@ -142,6 +147,83 @@ const Workouts = () => {
 		}
 	};
 
+	const handleRenameWorkout = async (name, description) => {
+		try {
+			const userId = await AsyncStorage.getItem("userId");
+			const workoutId = selectedWorkout.id;
+
+			if (!userId || !workoutId) {
+				Alert.alert("Error", "Workout ID or User ID not found. Please log in again.");
+				return;
+			}
+
+			const payload = {
+				workout_id: workoutId,
+				user_id: parseInt(userId, 10),
+				name,
+				description,
+			};
+
+			const response = await axios.put("https://no-pain-no-main.azurewebsites.net/updateworkoutprofile", payload);
+
+			if (response.status === 200) {
+				Alert.alert("Success", "Workout renamed successfully!");
+				setIsRenameModalVisible(false);
+				setIsModalVisible(false);
+
+				// Update local state
+				setCustomWorkouts((prev) => prev.map((workout) => (workout.id === workoutId ? { ...workout, name, description } : workout)));
+			} else {
+				throw new Error(response.data.error || "Failed to update workout.");
+			}
+		} catch (error) {
+			console.error("Error updating workout:", error);
+			Alert.alert("Error", "Failed to update workout. Please try again.");
+		}
+	};
+
+	const RenameWorkoutModal = ({ isVisible, onClose, currentName, currentDescription, onSave }) => {
+		const [localName, setLocalName] = useState(currentName || "");
+		const [localDescription, setLocalDescription] = useState(currentDescription || "");
+
+		useEffect(() => {
+			if (isVisible) {
+				setLocalName(currentName || "");
+				setLocalDescription(currentDescription || "");
+			}
+		}, [isVisible, currentName, currentDescription]);
+
+		return (
+			<Modal visible={isVisible} animationType="slide" transparent={true}>
+				<View style={styles.saveWorkoutModalWrapper}>
+					<View style={styles.saveWorkoutModalBox}>
+						<Text style={styles.saveWorkoutModalTitle}>Rename Workout</Text>
+						<TextInput style={styles.workoutNameInput} placeholder="Workout Name" value={localName} onChangeText={setLocalName} />
+						<TextInput
+							style={styles.workoutDescriptionInput}
+							placeholder="Workout Description"
+							value={localDescription}
+							onChangeText={setLocalDescription}
+							multiline
+						/>
+						<TouchableOpacity onPress={() => onSave(localName, localDescription)} style={styles.saveWorkoutButton}>
+							<Text style={styles.saveWorkoutButtonText}>Save</Text>
+						</TouchableOpacity>
+						<TouchableOpacity onPress={onClose} style={styles.closeWorkoutButton}>
+							<Text style={styles.closeWorkoutButtonText}>Cancel</Text>
+						</TouchableOpacity>
+					</View>
+				</View>
+			</Modal>
+		);
+	};
+
+	const openRenameModal = (workout) => {
+		setRenameWorkoutName(workout.name);
+		setRenameWorkoutDescription(workout.description);
+		setIsRenameModalVisible(true);
+	};
+
 	return (
 		<PageWrapper>
 			<SafeAreaView style={styles.safeArea}>
@@ -207,7 +289,31 @@ const Workouts = () => {
 					>
 						<View style={styles.modalOverlay}>
 							<View style={styles.modalContainer}>
-								<Text style={styles.modalTitle}>{selectedWorkout?.name}</Text>
+								{/* Modal Header */}
+								<View style={styles.modalHeader}>
+									{/* Workout Name */}
+									<Text style={styles.modalTitle} numberOfLines={1} ellipsizeMode="tail">
+										{selectedWorkout?.name}
+									</Text>
+									{/* Icon Buttons */}
+									{!selectedWorkout?.is_public && (
+										<View style={styles.iconButtonContainer}>
+											<TouchableOpacity style={styles.iconButton} onPress={() => openRenameModal(selectedWorkout)}>
+												<Icon name="edit" size={20} color={theme.colors.textPrimary} />
+											</TouchableOpacity>
+											<TouchableOpacity
+												style={styles.iconButton}
+												onPress={() => {
+													deleteWorkout(selectedWorkout.id);
+													setIsModalVisible(false);
+												}}>
+												<Icon name="trash" size={20} color={theme.colors.error} />
+											</TouchableOpacity>
+										</View>
+									)}
+								</View>
+
+								{/* Workout Description */}
 								<Text style={styles.modalDescription}>{selectedWorkout?.description}</Text>
 
 								{/* List of Exercises */}
@@ -227,7 +333,7 @@ const Workouts = () => {
 									})}
 								</ScrollView>
 
-								{/* Buttons at the bottom */}
+								{/* Action Buttons */}
 								<View style={styles.modalButtonContainer}>
 									<TouchableOpacity
 										style={styles.modalButton}
@@ -245,7 +351,13 @@ const Workouts = () => {
 							</View>
 						</View>
 					</Modal>
-					;
+					<RenameWorkoutModal
+						isVisible={isRenameModalVisible}
+						onClose={() => setIsRenameModalVisible(false)}
+						currentName={renameWorkoutName}
+						currentDescription={renameWorkoutDescription}
+						onSave={(name, description) => handleRenameWorkout(name, description)}
+					/>
 				</ScrollView>
 			</SafeAreaView>
 		</PageWrapper>
@@ -333,6 +445,8 @@ const styles = StyleSheet.create({
 	},
 	modalTitle: {
 		...globalStyles.modalTitle,
+		marginBottom: 0,
+		flex: 1,
 	},
 	modalDescription: {
 		color: theme.colors.textPrimary,
@@ -362,10 +476,11 @@ const styles = StyleSheet.create({
 		fontWeight: "bold",
 	},
 	modalButtonContainer: {
-		marginTop: "auto", // Push content to the top, keeping buttons at the bottom
+		marginTop: "auto", // Keep buttons at the bottom of the modal
 		width: "100%",
 		alignItems: "center",
 		paddingTop: theme.spacing.medium,
+		paddingBottom: theme.spacing.medium, // Optional: add padding at the bottom
 	},
 	exerciseList: {
 		flex: 1,
@@ -388,7 +503,100 @@ const styles = StyleSheet.create({
 		fontSize: theme.fonts.regular - 2,
 		marginTop: 2,
 	},
-	
+	saveWorkoutModalWrapper: {
+		flex: 1,
+		justifyContent: "center",
+		alignItems: "center",
+		backgroundColor: "rgba(0, 0, 0, 0.7)", // Transparent background effect
+	},
+	saveWorkoutModalBox: {
+		width: "90%",
+		height: "70%",
+		backgroundColor: theme.colors.cardBackground,
+		borderRadius: theme.borderRadius.large,
+		padding: theme.spacing.medium,
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.3,
+		shadowRadius: 4,
+		elevation: 5,
+		alignSelf: "center",
+		justifyContent: "center",
+	},
+	saveWorkoutModalTitle: {
+		fontSize: theme.fonts.large,
+		fontWeight: "bold",
+		color: theme.colors.textPrimary,
+		textAlign: "center",
+		marginBottom: theme.spacing.large,
+	},
+	workoutNameInput: {
+		backgroundColor: theme.colors.inputBackground,
+		color: theme.colors.textPrimary,
+		borderRadius: theme.borderRadius.medium,
+		paddingVertical: theme.spacing.small,
+		paddingHorizontal: theme.spacing.medium,
+		fontSize: theme.fonts.large,
+		borderColor: theme.colors.border,
+		borderWidth: 1,
+		textAlign: "center",
+		width: "100%", // Full width for workout name
+		marginBottom: theme.spacing.medium,
+	},
+	workoutDescriptionInput: {
+		backgroundColor: theme.colors.inputBackground,
+		color: theme.colors.textPrimary,
+		borderRadius: theme.borderRadius.medium,
+		paddingVertical: theme.spacing.small,
+		paddingHorizontal: theme.spacing.medium,
+		fontSize: theme.fonts.regular,
+		borderColor: theme.colors.border,
+		borderWidth: 1,
+		textAlign: "center",
+		width: "90%", // Slightly narrower than workout name
+		height: 200, // Longer height for description
+		marginBottom: theme.spacing.medium,
+		alignSelf: "center",
+	},
+	saveWorkoutButton: {
+		backgroundColor: theme.colors.primary,
+		paddingVertical: theme.spacing.small,
+		borderRadius: theme.borderRadius.medium,
+		marginVertical: theme.spacing.medium,
+		width: "60%",
+		alignSelf: "center",
+	},
+	saveWorkoutButtonText: {
+		color: theme.colors.textPrimary,
+		fontWeight: "bold",
+		fontSize: theme.fonts.regular,
+		textAlign: "center",
+	},
+	closeWorkoutButton: {
+		backgroundColor: theme.colors.error,
+		paddingVertical: theme.spacing.small,
+		borderRadius: theme.borderRadius.medium,
+		width: "60%",
+		alignSelf: "center",
+	},
+	closeWorkoutButtonText: {
+		color: theme.colors.textPrimary,
+		fontWeight: "bold",
+		fontSize: theme.fonts.regular,
+		textAlign: "center",
+	},
+	modalHeader: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+	},
+	iconButtonContainer: {
+		flexDirection: "row",
+		alignItems: "center",
+	},
+	iconButton: {
+		marginLeft: theme.spacing.small,
+	},
 });
 
 export default Workouts;
