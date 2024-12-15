@@ -14,14 +14,11 @@ Our mission is to blend effective workouts with interactive recovery, ensuring t
 - Kaleb Rietman
 - Zach Redder
 
-## Expo
-This project is built using Expo, an open-source platform for making universal native apps for Android, iOS, and the web using JavaScript and React. The documentation can be found [here](https://docs.expo.dev/)
-
 ## Build Requirements
-*Node.js (14.15.0 or newer)
-*npm
-*Expo
-*Xcode (optional)
+* Node.js (14.15.0 or newer)
+* npm
+* [Expo](https://docs.expo.dev/)
+* Xcode (optional)
 
 ## Installation
 1. Clone the repository
