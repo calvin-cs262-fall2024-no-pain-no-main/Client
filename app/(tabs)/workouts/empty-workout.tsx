@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { View, SafeAreaView, Text, TextInput, Modal, FlatList, TouchableOpacity, StyleSheet, ScrollView, Image } from "react-native";
+import { Menu, Provider } from "react-native-paper"; // Add this import for the dropdown menu
 import { CheckBox } from "react-native-elements";
 import Icon from "react-native-vector-icons/FontAwesome5";
 import axios from "axios";
@@ -38,40 +39,35 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
 	const [isExerciseModalVisible, setExerciseModalVisible] = useState(false);
 	const [availableExercises, setAvailableExercises] = useState<Exercise[]>([]);
 	const [muscleGroups, setMuscleGroups] = useState<string[]>([]);
+	const [newSets, setNewSets] = useState<any[]>([]); // Track new sets added
+	const [completedSets, setCompletedSets] = useState<any[]>([]); // Track completed sets
+	const [isEmptyWorkout, setIsEmptyWorkout] = useState(false); // Track if workout is empty
+	const [menuVisible, setMenuVisible] = useState<number | null>(null);
+	const [isSaveModalVisible, setSaveModalVisible] = useState(false);
 	const [workoutName, setWorkoutName] = useState("");
-	const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<string | null>(null);
+	const [workoutDescription, setWorkoutDescription] = useState("");
+	
 
 	useEffect(() => {
 		const fetchData = async () => {
 			try {
-				// Fetch exercises saved in AsyncStorage for the current workout
+				const workoutType = await AsyncStorage.getItem("workoutType");
 				const savedExercises = await AsyncStorage.getItem("exercises");
-				let parsedExercises = savedExercises ? JSON.parse(savedExercises) : [];
 
-				// Fetch all available exercises from the API
+				setIsEmptyWorkout(workoutType === "empty");
+
+				// Fetch all available exercises
 				const { data: allExercises } = await axios.get("https://no-pain-no-main.azurewebsites.net/exercises");
 
-				// Create a map for quick lookup of exercise details
-				const exerciseMap = allExercises.reduce((map: Record<number, any>, exercise: any) => {
-					map[exercise.id] = {
-						name: exercise.name,
-						description: exercise.description,
-						muscle_group: exercise.muscle_group,
-					};
-					return map;
-				}, {});
+				// Ensure saved exercises have proper names and IDs
+				const updatedExercises = (savedExercises ? JSON.parse(savedExercises) : []).map((exercise: Exercise) => {
+					const matchedExercise = allExercises.find((ex: any) => ex.id === exercise.id);
+					return matchedExercise ? { ...exercise, name: matchedExercise.name, muscle_group: matchedExercise.muscle_group } : exercise;
+				});
 
-				// Enrich saved exercises with full details from the exerciseMap
-				parsedExercises = parsedExercises.map((exercise: any) => ({
-					...exercise,
-					name: exerciseMap[exercise.id]?.name || `Exercise ${exercise.id}`,
-					description: exerciseMap[exercise.id]?.description || "No description available",
-					muscle_group: exerciseMap[exercise.id]?.muscle_group || "Unknown",
-				}));
+				setExercises(updatedExercises);
 
-				setExercises(parsedExercises);
-
-				// Populate available exercises for adding to the workout
+				// Map exercise data for UI
 				const exercisesWithSets = allExercises.map((exercise: any) => ({
 					...exercise,
 					sets: [{ set: 1, lbs: 0, reps: 0, completed: false, restTime: 120 }],
@@ -91,61 +87,263 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
 		fetchData();
 	}, []);
 
-	const addExercise = (exercise: Exercise) => {
+	const addExercise = async (exercise: Exercise) => {
 		if (exercises.some((e) => e.id === exercise.id)) {
-			alert("Duplicate Exercise. This exercise is already added.");
+			Alert.alert("Duplicate Exercise", "This exercise is already added.");
 			return;
 		}
 
-		// Add exercise with its predefined sets
-		setExercises((prevExercises) => [...prevExercises, { ...exercise, sets: exercise.sets }]);
-		setExerciseModalVisible(false);
+		try {
+			if (isEmptyWorkout) {
+				const newExercise = { ...exercise, sets: [] };
+				setExercises((prevExercises) => [...prevExercises, newExercise]);
+				return;
+			}
+			// Fetch necessary IDs
+			const userId = await AsyncStorage.getItem("userId");
+			const workoutId = await AsyncStorage.getItem("currentWorkoutId");
+
+			if (!userId || !workoutId) {
+				Alert.alert("Error", "Workout ID or User ID not found. Please log in again.");
+				return;
+			}
+
+			// Prepare payload for API call
+			const payload = {
+				user_id: parseInt(userId, 10),
+				workout_id: parseInt(workoutId, 10),
+				exercise_id: exercise.id,
+				performance_data: {
+					sets: [],
+				},
+			};
+
+			// Call the API to add the exercise to the workout
+			const response = await axios.post("https://no-pain-no-main.azurewebsites.net/addexercisetoworkout", payload);
+
+			if (response.status === 200) {
+				// Add new exercise locally
+				const newExercise = { ...exercise, sets: [] };
+				setExercises((prevExercises) => [...prevExercises, newExercise]);
+
+				// If this was an empty workout, mark it as non-empty
+				if (isEmptyWorkout) setIsEmptyWorkout(false);
+			} else {
+				throw new Error(response.data.error || "Failed to add exercise to workout.");
+			}
+		} catch (error) {
+			console.error("Error adding exercise to workout:", error);
+			Alert.alert("Error", "An error occurred while adding the exercise.");
+		}
 	};
 
 	const addSet = (exerciseIndex: number) => {
-		const newExercises = [...exercises];
-		const currentSets = newExercises[exerciseIndex].sets;
+		const updatedExercises = [...exercises];
+		const currentExercise = updatedExercises[exerciseIndex];
+
 		const newSet = {
-			set: currentSets.length + 1,
+			set: currentExercise.sets.length + 1,
 			lbs: 0,
 			reps: 0,
 			completed: false,
 			restTime: 120,
 		};
-		currentSets.push(newSet);
-		setExercises(newExercises);
+
+		currentExercise.sets.push(newSet);
+		setNewSets((prev) => [...prev, { ...newSet, exercise_id: currentExercise.id, exerciseIndex }]);
+		setExercises(updatedExercises);
 	};
 
 	const updateSet = (exerciseIndex: number, setIndex: number, field: keyof Set, value: string | number | boolean) => {
 		const updatedExercises = [...exercises];
-		updatedExercises[exerciseIndex].sets[setIndex][field] = value;
+		const currentExercise = updatedExercises[exerciseIndex];
+		const setToUpdate = currentExercise.sets[setIndex];
+
+		setToUpdate[field] = value;
+
+		if (field === "completed" && value === true) {
+			setCompletedSets((prev) => [...prev, { ...setToUpdate, exercise_id: currentExercise.id }]);
+		}
+
 		setExercises(updatedExercises);
 	};
 
-	const handleMuscleGroupSelect = (muscle: string) => {
-		setSelectedMuscleGroup(muscle);
-	};
-
-	const saveWorkout = async () => {
-		if (!workoutName || exercises.length === 0) {
-			Alert.alert("Error", "Please provide a workout name and add at least one exercise.");
-			return;
-		}
-
-		const workoutDescription = "A workout created in the app"; // You can make this dynamic or static
-
+	const updateWorkout = async () => {
 		try {
 			const userId = await AsyncStorage.getItem("userId");
-			if (!userId) {
-				Alert.alert("Error", "User ID not found. Please log in again.");
+			const workoutId = await AsyncStorage.getItem("currentWorkoutId"); // Retrieve workout ID from AsyncStorage
+
+			if (!userId || !workoutId) {
+				Alert.alert("Error", "Workout ID or User ID not found. Please log in again.");
 				return;
 			}
 
-			// Prepare the data for the API
+			if (isEmptyWorkout) {
+				setSaveModalVisible(true); // Show modal for entering name and description
+				return;
+			} else {
+				for (const set of newSets) {
+					const { exercise_id, set: setNumber, reps, lbs } = set;
+
+					const addSetData = {
+						user_id: parseInt(userId, 10),
+						exercise_id,
+						workout_id: parseInt(workoutId, 10),
+						reps,
+						weight: lbs,
+					};
+
+					console.log("Adding set:", addSetData);
+
+					try {
+						await axios.put("https://no-pain-no-main.azurewebsites.net/addsettoexercise", addSetData);
+					} catch (error) {
+						console.error("Error adding set:", error);
+					}
+				}
+
+				// Update completed sets
+				for (const set of completedSets) {
+					const { exercise_id, set: setNumber, reps, lbs } = set;
+
+					const updateSetData = {
+						user_id: parseInt(userId, 10),
+						exercise_id,
+						workout_id: parseInt(workoutId, 10),
+						set_number: setNumber,
+						reps,
+						weight: lbs,
+					};
+
+					console.log("Updating set:", updateSetData);
+					try {
+						await axios.put("https://no-pain-no-main.azurewebsites.net/updateset", updateSetData);
+					} catch (error) {
+						console.error("Error updating set:", error);
+					}
+				}
+
+				Alert.alert("Success", "Workout updated successfully!");
+				await AsyncStorage.setItem("workoutsReload", "true");
+				router.replace("/workouts");
+			}
+		} catch (error) {
+			console.error("Error updating workout:", error);
+			Alert.alert("Error", "Something went wrong while updating the workout.");
+		}
+	};
+	// Function shells for delete actions
+	const deleteExercise = async (exerciseId: number) => {
+		try {
+			// Check if this is an empty workout
+			if (isEmptyWorkout) {
+				// Remove the exercise locally without calling the API
+				setExercises((prevExercises) => prevExercises.filter((exercise) => exercise.id !== exerciseId));
+				return;
+			}
+
+			// Fetch necessary IDs
+			const userId = await AsyncStorage.getItem("userId");
+			const workoutId = await AsyncStorage.getItem("currentWorkoutId");
+
+			if (!userId || !workoutId) {
+				Alert.alert("Error", "Workout ID or User ID not found. Please log in again.");
+				return;
+			}
+
+			// Call the API to delete the exercise from the workout
+			const response = await axios.delete("https://no-pain-no-main.azurewebsites.net/deleteexercisefromworkout", {
+				data: {
+					user_id: parseInt(userId, 10),
+					workout_id: parseInt(workoutId, 10),
+					exercise_id: exerciseId,
+				},
+			});
+
+			if (response.status === 200) {
+				// Remove the exercise locally
+				setExercises((prevExercises) => prevExercises.filter((exercise) => exercise.id !== exerciseId));
+				Alert.alert("Success", "Exercise deleted successfully!");
+			} else {
+				throw new Error(response.data.error || "Failed to delete exercise from workout.");
+			}
+		} catch (error) {
+			console.error("Error deleting exercise from workout:", error);
+			Alert.alert("Error", "An error occurred while deleting the exercise.");
+		}
+	};
+
+	const deleteSet = async (exerciseIndex: number) => {
+		const updatedExercises = [...exercises];
+		const currentExercise = updatedExercises[exerciseIndex];
+
+		// Check if there are any sets to delete
+		if (currentExercise.sets.length === 0) {
+			Alert.alert("No Sets to Delete", "This exercise has no sets to delete.");
+			return;
+		}
+
+		// Remove the last set
+		currentExercise.sets.pop();
+
+		try {
+			// For saved exercises, make the API call
+			const userId = await AsyncStorage.getItem("userId");
+			const workoutId = await AsyncStorage.getItem("currentWorkoutId");
+
+			if (userId && workoutId) {
+				const lastSetNumber = currentExercise.sets.length + 1;
+
+				const payload = {
+					user_id: parseInt(userId, 10),
+					exercise_id: currentExercise.id,
+					workout_id: parseInt(workoutId, 10),
+					set_number: lastSetNumber,
+				};
+
+				const response = await axios.put("https://no-pain-no-main.azurewebsites.net/deletesetfromexercise", payload);
+
+				if (response.status !== 200) {
+					Alert.alert("Error", response.data.error || "Failed to delete the set.");
+				}
+			}
+		} catch (error) {
+			console.error("Error deleting set:", error);
+			Alert.alert("Error", "An error occurred while deleting the set.");
+		}
+
+		setExercises(updatedExercises);
+	};
+	const handleSetCompletion = (set: Set, exercise: Exercise, exerciseIndex: number, setIndex: number) => {
+		const newCompletedState = !set.completed;
+		updateSet(exerciseIndex, setIndex, "completed", newCompletedState);
+
+		if (newCompletedState) {
+			const timerData = {
+				exerciseId: exercise.id,
+				exerciseName: exercise.name,
+				setNumber: set.set,
+				restTime: set.restTime,
+			};
+
+			AsyncStorage.setItem("timerData", JSON.stringify(timerData))
+				.then(() => {
+					router.push("/workouts/timer");
+				})
+				.catch((error) => {
+					console.error("Error saving timer data:", error);
+					Alert.alert("Error", "Failed to start the timer. Please try again.");
+				});
+		}
+	};
+	const handleSaveWorkout = async (name: string, description: string) => {
+		try {
+			const userId = await AsyncStorage.getItem("userId");
 			const workoutData = {
-				name: workoutName,
-				description: workoutDescription,
-				userId: parseInt(userId, 10), // Ensure userId is sent as a number
+				name,
+				description,
+				userId: parseInt(userId!, 10),
+				isPublic: false,
 				exercises: exercises.map((exercise) => ({
 					exercise_id: exercise.id,
 					performanceData: {
@@ -159,137 +357,191 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
 				})),
 			};
 
-			// Send POST request to the saveWorkout endpoint
 			const response = await axios.post("https://no-pain-no-main.azurewebsites.net/saveworkout", workoutData);
 
 			if (response.status === 201) {
 				Alert.alert("Success", "Workout saved successfully!");
-
-				// Set the reload flag for workout fetching
 				await AsyncStorage.setItem("workoutsReload", "true");
-
-				// Navigate back to the Workouts page
 				router.replace("/workouts");
 			} else {
-				Alert.alert("Error", response.data.error || "Failed to save the workout.");
+				throw new Error(response.data.error || "Failed to save the workout.");
 			}
 		} catch (error) {
 			console.error("Error saving workout:", error);
-			Alert.alert("Error", "Something went wrong while saving the workout.");
+			Alert.alert("Error", "An error occurred while saving the workout.");
 		}
 	};
 
-	return (
-		<PageWrapper>
-			<SafeAreaView style={styles.safeAreaContainer}>
-				<ScrollView style={styles.container} showsHorizontalScrollIndicator={false} showsVerticalScrollIndicator={false}>
-					<View style={styles.topIconContainer}>
-						<Image source={headerImage} style={styles.headerImage} />
-					</View>
-					<View style={styles.inputWithButton}>
-						<TextInput
-							style={styles.saveExerciseText}
-							placeholder="Enter Workout Name"
-							placeholderTextColor={theme.colors.textSecondary}
-							value={workoutName}
-							onChangeText={setWorkoutName}
-						/>
+	const toggleMenu = (exerciseIndex: number | null) => {
+		setMenuVisible(menuVisible === exerciseIndex ? null : exerciseIndex);
+	};
 
-						<TouchableOpacity style={styles.saveButton} onPress={saveWorkout}>
-							<Text style={styles.saveButtonText}>Save</Text>
+	const renderExercise = (exercise: Exercise, exerciseIndex: number) => {
+		return (
+			<View key={exercise.id} style={styles.exerciseContainer}>
+				<View style={styles.exerciseHeader}>
+					<Text style={styles.exerciseTitle}>{exercise.name.toUpperCase()}</Text>
+					<Menu
+						visible={menuVisible === exerciseIndex}
+						onDismiss={() => toggleMenu(null)}
+						anchor={
+							<TouchableOpacity onPress={() => toggleMenu(exerciseIndex)}>
+								<Icon name="ellipsis-v" size={20} color={theme.colors.textPrimary} />
+							</TouchableOpacity>
+						}>
+						<Menu.Item
+							onPress={() => {
+								toggleMenu(null);
+								deleteExercise(exercise.id);
+							}}
+							title="Delete Exercise"
+						/>
+						<Menu.Item
+							onPress={() => {
+								toggleMenu(null);
+								deleteSet(exerciseIndex); // Pass appropriate set index here
+							}}
+							title="Delete Set"
+						/>
+					</Menu>
+				</View>
+				<Text style={styles.exerciseSubtitle}>{exercise.muscle_group.toUpperCase()}</Text>
+				<View style={styles.headerRow}>
+					<Text style={styles.columnHeader}>Set</Text>
+					<Text style={styles.columnHeader}>Lbs</Text>
+					<Text style={styles.columnHeader}>Reps</Text>
+					<Text style={styles.columnHeader}>✓</Text>
+				</View>
+
+				{exercise.sets.map((set, setIndex) => renderSet(set, setIndex, exercise, exerciseIndex))}
+
+				<TouchableOpacity onPress={() => addSet(exerciseIndex)} style={styles.addSetButton}>
+					<Text style={styles.addSetButtonText}>Add Set</Text>
+				</TouchableOpacity>
+			</View>
+		);
+	};
+	const renderSet = (set: Set, setIndex: number, exercise: Exercise, exerciseIndex: number) => {
+		return (
+			<View key={setIndex} style={styles.row}>
+				<View style={styles.cell}>
+					<Text style={styles.cellText}>{set.set}</Text>
+				</View>
+				<View style={styles.cell}>
+					<TextInput
+						style={styles.input}
+						keyboardType="numeric"
+						placeholder={String(set.lbs)}
+						onChangeText={(value) => updateSet(exerciseIndex, setIndex, "lbs", Number(value))}
+					/>
+				</View>
+				<View style={styles.cell}>
+					<TextInput
+						style={styles.input}
+						keyboardType="numeric"
+						placeholder={String(set.reps)}
+						onChangeText={(value) => updateSet(exerciseIndex, setIndex, "reps", Number(value))}
+					/>
+				</View>
+				<View style={styles.cell}>
+					<CheckBox
+						checked={set.completed}
+						onPress={() => handleSetCompletion(set, exercise, exerciseIndex, setIndex)}
+						containerStyle={styles.checkbox}
+						checkedColor={theme.colors.primary}
+						uncheckedColor="#666"
+					/>
+				</View>
+			</View>
+		);
+	};
+
+	const SaveWorkoutModal = ({ isVisible, onClose, onSave }) => {
+		const [localWorkoutName, setLocalWorkoutName] = useState(workoutName); // Use local state for the input
+		const [localWorkoutDescription, setLocalWorkoutDescription] = useState(workoutDescription);
+
+		useEffect(() => {
+			if (isVisible) {
+				setLocalWorkoutName(workoutName); // Sync with parent state when modal opens
+				setLocalWorkoutDescription(workoutDescription);
+			}
+		}, [isVisible]);
+
+		return (
+			<Modal visible={isVisible} animationType="slide" transparent={true}>
+				<View style={styles.saveWorkoutModalWrapper}>
+					<View style={styles.saveWorkoutModalBox}>
+						<Text style={styles.saveWorkoutModalTitle}>Save Workout</Text>
+						<ScrollView style={{ width: "100%" }} showsVerticalScrollIndicator={false}>
+							<TextInput style={styles.workoutNameInput} placeholder="Workout Name" value={localWorkoutName} onChangeText={setLocalWorkoutName} />
+							<TextInput
+								style={styles.workoutDescriptionInput}
+								placeholder="Workout Description"
+								value={localWorkoutDescription}
+								onChangeText={setLocalWorkoutDescription}
+								multiline
+							/>
+						</ScrollView>
+						<TouchableOpacity
+							onPress={() => {
+								onSave(localWorkoutName, localWorkoutDescription); // Save local state to parent
+								onClose();
+							}}
+							style={styles.saveWorkoutButton}>
+							<Text style={styles.saveWorkoutButtonText}>Save</Text>
+						</TouchableOpacity>
+						<TouchableOpacity onPress={onClose} style={styles.closeWorkoutButton}>
+							<Text style={styles.closeWorkoutButtonText}>Cancel</Text>
 						</TouchableOpacity>
 					</View>
+				</View>
+			</Modal>
+		);
+	};
 
-					<View style={styles.divider} />
-					{exercises.map((exercise, exerciseIndex) => (
-						<View key={exercise.id} style={styles.exerciseContainer}>
-							<Text style={styles.exerciseTitle}>{exercise.name.toUpperCase()}</Text>
-							<Text style={styles.exerciseSubtitle}>{exercise.muscle_group.toUpperCase()}</Text>
-							<View style={styles.headerRow}>
-								<Text style={styles.columnHeader}>Set</Text>
-								<Text style={styles.columnHeader}>Lbs</Text>
-								<Text style={styles.columnHeader}>Reps</Text>
-								<Text style={styles.columnHeader}>✓</Text>
-							</View>
-							{exercise.sets.map((set, setIndex) => (
-								<View key={setIndex} style={styles.row}>
-									<View style={styles.cell}>
-										<Text style={styles.cellText}>{set.set}</Text>
-									</View>
-									<View style={styles.cell}>
-										<TextInput
-											style={styles.input}
-											keyboardType="numeric"
-											value={String(set.lbs)}
-											onChangeText={(value) => updateSet(exerciseIndex, setIndex, "lbs", Number(value))}
-										/>
-									</View>
-									<View style={styles.cell}>
-										<TextInput
-											style={styles.input}
-											keyboardType="numeric"
-											value={String(set.reps)}
-											onChangeText={(value) => updateSet(exerciseIndex, setIndex, "reps", Number(value))}
-										/>
-									</View>
-									<View style={styles.cell}>
-										<CheckBox
-											checked={set.completed}
-											onPress={() => {
-												const newCompletedState = !set.completed;
-												updateSet(exerciseIndex, setIndex, "completed", newCompletedState);
-
-												if (newCompletedState) {
-													// Store exercise details in AsyncStorage
-													const timerData = {
-														exerciseId: exercise.id,
-														exerciseName: exercise.name,
-														setNumber: set.set,
-														restTime: set.restTime,
-													};
-
-													AsyncStorage.setItem("timerData", JSON.stringify(timerData))
-														.then(() => {
-															// Navigate to the timer page
-															router.push("/workouts/timer");
-														})
-														.catch((error) => {
-															console.error("Error saving timer data:", error);
-															Alert.alert("Error", "Failed to start the timer. Please try again.");
-														});
-												}
-											}}
-											containerStyle={styles.checkbox}
-											checkedColor={theme.colors.primary}
-											uncheckedColor="#666"
-										/>
-									</View>
-								</View>
-							))}
-							<TouchableOpacity onPress={() => addSet(exerciseIndex)} style={styles.addSetButton}>
-								<Text style={styles.addSetButtonText}>Add Set</Text>
-							</TouchableOpacity>
+	return (
+		<Provider>
+			<PageWrapper>
+				<SafeAreaView style={styles.safeAreaContainer}>
+					<ScrollView style={styles.container} showsHorizontalScrollIndicator={false} showsVerticalScrollIndicator={false}>
+						<View style={styles.topIconContainer}>
+							<Image source={headerImage} style={styles.headerImage} />
 						</View>
-					))}
-					<TouchableOpacity onPress={() => setExerciseModalVisible(true)} style={styles.addExerciseButton}>
-						<Text style={styles.addExerciseText}>Add Exercise</Text>
-					</TouchableOpacity>
-					<View style={styles.divider} />
-					<ExerciseModal
-						isVisible={isExerciseModalVisible}
-						onClose={() => setExerciseModalVisible(false)}
-						availableExercises={availableExercises}
-						addExercise={addExercise}
-						muscleGroups={muscleGroups}
-						handleMuscleGroupSelect={handleMuscleGroupSelect}
-					/>
-				</ScrollView>
-			</SafeAreaView>
-		</PageWrapper>
+						<View style={styles.divider} />
+
+						{/* Render Exercise List */}
+						{exercises.map((exercise, exerciseIndex) => renderExercise(exercise, exerciseIndex))}
+
+						{/* Add Exercise Button */}
+						<TouchableOpacity onPress={() => setExerciseModalVisible(true)} style={styles.addExerciseButton}>
+							<Text style={styles.addExerciseText}>Add Exercise</Text>
+						</TouchableOpacity>
+
+						{/* Complete Workout Button */}
+						<TouchableOpacity onPress={updateWorkout} style={styles.completeWorkoutButton}>
+							<Text style={styles.completeWorkoutText}>Complete Workout</Text>
+						</TouchableOpacity>
+
+						<View style={styles.divider} />
+
+						{/* Exercise Modal */}
+						<ExerciseModal
+							isVisible={isExerciseModalVisible}
+							onClose={() => setExerciseModalVisible(false)}
+							availableExercises={availableExercises}
+							addExercise={addExercise}
+							muscleGroups={muscleGroups}
+						/>
+					</ScrollView>
+				</SafeAreaView>
+			</PageWrapper>
+			{/* Save Workout Modal */}
+			<SaveWorkoutModal isVisible={isSaveModalVisible} onClose={() => setSaveModalVisible(false)} onSave={handleSaveWorkout} />
+		</Provider>
 	);
 };
 
-const ExerciseModal = ({ isVisible, onClose, availableExercises, addExercise, muscleGroups, handleMuscleGroupSelect }) => {
+const ExerciseModal = ({ isVisible, onClose, availableExercises, addExercise, muscleGroups }) => {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [isFilterModalVisible, setFilterModalVisible] = useState(false);
 	const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<string | null>(null);
@@ -342,7 +594,12 @@ const ExerciseModal = ({ isVisible, onClose, availableExercises, addExercise, mu
 						data={filteredExercises}
 						keyExtractor={(item) => item.id.toString()}
 						renderItem={({ item }) => (
-							<TouchableOpacity onPress={() => addExercise(item)} style={styles.modalItem}>
+							<TouchableOpacity
+								onPress={() => {
+									addExercise(item);
+									onClose(); // Close the modal after selecting the exercise
+								}}
+								style={styles.modalItem}>
 								<Text style={styles.modalItemText}>
 									{item.name} ({item.muscle_group})
 								</Text>
@@ -505,7 +762,6 @@ const styles = StyleSheet.create({
 		backgroundColor: theme.colors.primary,
 		padding: theme.spacing.small,
 		borderRadius: theme.borderRadius.medium,
-		alignItems: "center",
 		marginVertical: theme.spacing.medium,
 		width: "80%",
 		alignSelf: "center",
@@ -513,6 +769,7 @@ const styles = StyleSheet.create({
 	addExerciseText: {
 		color: theme.colors.textPrimary,
 		fontWeight: "bold",
+		textAlign: "center",
 	},
 	bottomIconContainer: {
 		flexDirection: "row",
@@ -544,18 +801,19 @@ const styles = StyleSheet.create({
 		backgroundColor: theme.colors.primary,
 		padding: theme.spacing.small,
 		borderRadius: 8,
-		alignItems: "center",
 		marginTop: theme.spacing.medium,
 	},
 	modalCloseButtonText: {
 		color: theme.colors.textPrimary,
 		fontWeight: "bold",
+		textAlign: "center",
 	},
 	addSetButton: {
 		marginTop: theme.spacing.small,
 		padding: theme.spacing.small,
 		backgroundColor: theme.colors.primary,
 		borderRadius: theme.borderRadius.medium,
+		
 	},
 	addSetButtonText: {
 		color: theme.colors.textPrimary,
@@ -566,7 +824,6 @@ const styles = StyleSheet.create({
 		backgroundColor: theme.colors.inputBackground,
 		padding: theme.spacing.small,
 		borderRadius: theme.borderRadius.medium,
-		alignItems: "center",
 		marginBottom: theme.spacing.small,
 		width: "80%",
 		alignSelf: "center",
@@ -575,36 +832,109 @@ const styles = StyleSheet.create({
 		color: theme.colors.textSecondary,
 		fontWeight: "bold",
 		fontSize: theme.fonts.regular,
+		textAlign: "center"
 	},
-	inputWithButton: {
-		flexDirection: "row", // Aligns input and button horizontally
-		alignItems: "center", // Ensures vertical alignment
-		justifyContent: "space-between", // Distributes space between input and button
-		marginBottom: theme.spacing.medium, // Adjust as needed
-		position: "relative", // Ensures button is within the container but can stay fixed
-		width: "100%", // Ensures it takes full width
+	completeWorkoutButton: {
+		backgroundColor: theme.colors.buttonBackground, // Use a green or success-themed color
+		padding: theme.spacing.small,
+		borderRadius: theme.borderRadius.medium,
+		marginVertical: theme.spacing.medium,
+		width: "80%",
+		alignSelf: "center",
 	},
-	saveButton: {
-		marginLeft: 0, // Space between input and button
+	completeWorkoutText: {
+		color: theme.colors.textPrimary,
+		fontWeight: "bold",
+		fontSize: theme.fonts.regular,
+		textAlign: "center",
+	},
+	exerciseHeader: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+	},
+	// Save Workout Modal Specific Styles
+	saveWorkoutModalWrapper: {
+		flex: 1,
+		justifyContent: "center",
+		alignItems: "center",
+		backgroundColor: "rgba(0, 0, 0, 0.7)", // Transparent background effect
+	},
+	saveWorkoutModalBox: {
+		width: "90%",
+		height: "70%",
+		backgroundColor: theme.colors.cardBackground,
+		borderRadius: theme.borderRadius.large,
+		padding: theme.spacing.medium,
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.3,
+		shadowRadius: 4,
+		elevation: 5,
+		alignSelf: "center",
+		justifyContent: "center",
+	},
+	saveWorkoutModalTitle: {
+		fontSize: theme.fonts.large,
+		fontWeight: "bold",
+		color: theme.colors.textPrimary,
+		textAlign: "center",
+		marginBottom: theme.spacing.large,
+	},
+	workoutNameInput: {
+		backgroundColor: theme.colors.inputBackground,
+		color: theme.colors.textPrimary,
+		borderRadius: theme.borderRadius.medium,
 		paddingVertical: theme.spacing.small,
 		paddingHorizontal: theme.spacing.medium,
-		backgroundColor: theme.colors.primary, // Adjust based on your theme
-		borderRadius: 5,
-	},
-	saveExerciseText: {
-		flex: 1, // Ensures input takes up the available space
-		borderBottomWidth: 1,
+		fontSize: theme.fonts.large,
 		borderColor: theme.colors.border,
-		paddingVertical: theme.spacing.small,
-		paddingLeft: theme.spacing.small,
-		fontSize: 20,
-		color: theme.colors.textPrimary,
-		height: 50, // Fixed height for input to prevent resizing on text change
+		borderWidth: 1,
+		textAlign: "center",
+		width: "100%", // Full width for workout name
+		marginBottom: theme.spacing.medium,
 	},
-	saveButtonText: {
-		color: theme.colors.textPrimary, // Adjust text color
+	workoutDescriptionInput: {
+		backgroundColor: theme.colors.inputBackground,
+		color: theme.colors.textPrimary,
+		borderRadius: theme.borderRadius.medium,
+		paddingVertical: theme.spacing.small,
+		paddingHorizontal: theme.spacing.medium,
 		fontSize: theme.fonts.regular,
+		borderColor: theme.colors.border,
+		borderWidth: 1,
+		textAlign: "center",
+		width: "90%", // Slightly narrower than workout name
+		height: 200, // Longer height for description
+		marginBottom: theme.spacing.medium,
+		alignSelf: "center",
+	},
+	saveWorkoutButton: {
+		backgroundColor: theme.colors.primary,
+		paddingVertical: theme.spacing.small,
+		borderRadius: theme.borderRadius.medium,
+		marginVertical: theme.spacing.medium,
+		width: "60%",
+		alignSelf: "center",
+	},
+	saveWorkoutButtonText: {
+		color: theme.colors.textPrimary,
 		fontWeight: "bold",
+		fontSize: theme.fonts.regular,
+		textAlign: "center",
+	},
+	closeWorkoutButton: {
+		backgroundColor: theme.colors.error,
+		paddingVertical: theme.spacing.small,
+		borderRadius: theme.borderRadius.medium,
+		width: "60%",
+		alignSelf: "center",
+	},
+	closeWorkoutButtonText: {
+		color: theme.colors.textPrimary,
+		fontWeight: "bold",
+		fontSize: theme.fonts.regular,
+		textAlign: "center",
 	},
 });
 
