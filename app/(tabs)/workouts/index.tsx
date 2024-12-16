@@ -7,9 +7,10 @@ import { globalStyles } from "../../../assets/styles/globalStyles";
 import { theme } from "../../../assets/styles/theme";
 import PageWrapper from "../../../components/pageWrapper";
 import Icon from "react-native-vector-icons/FontAwesome";
+import HeaderImage from "../../../assets/images/VigilWeight.png";
 
 // Fixed
-const headerImage = require("../../../assets/images/VigilWeight.png");
+const headerImage = HeaderImage;
 
 const Workouts = () => {
 	const router = useRouter();

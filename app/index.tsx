@@ -6,6 +6,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage"; // Import 
 import { globalStyles } from "../assets/styles/globalStyles";
 import { theme } from "@/assets/styles/theme";
 import PageWrapper from "../components/pageWrapper";
+import VigilLogo from '../assets/images/VigilFullLogo.png';
 
 const Login = () => {
 	const [username, setUsername] = useState("");
@@ -114,7 +115,7 @@ const Login = () => {
 	return (
 		<PageWrapper>
 			<View style={styles.container}>
-				<Image source={require("../assets/images/VigilFullLogo.png")} style={styles.titleImage} resizeMode="contain" />
+				<Image source={VigilLogo} style={styles.titleImage} resizeMode="contain" />
 
 				{/* Username Input */}
 				<View style={styles.inputContainer}>

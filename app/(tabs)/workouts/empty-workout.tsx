@@ -10,8 +10,9 @@ import { theme } from "../../../assets/styles/theme";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert } from "react-native";
 import PageWrapper from "../../../components/pageWrapper";
+import HeaderImage from "../../../assets/images/VigilWeight.png";
 
-const headerImage = require("../../../assets/images/VigilWeight.png");
+const headerImage = HeaderImage;
 
 interface Exercise {
 	id: number;
@@ -46,7 +47,7 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
 	const [isSaveModalVisible, setSaveModalVisible] = useState(false);
 	const [workoutName, setWorkoutName] = useState("");
 	const [workoutDescription, setWorkoutDescription] = useState("");
-	
+
 
 	useEffect(() => {
 		const fetchData = async () => {
@@ -813,7 +814,7 @@ const styles = StyleSheet.create({
 		padding: theme.spacing.small,
 		backgroundColor: theme.colors.primary,
 		borderRadius: theme.borderRadius.medium,
-		
+
 	},
 	addSetButtonText: {
 		color: theme.colors.textPrimary,
