@@ -47,7 +47,7 @@ export default function Timer() {
 
   // Function to handle time input change
   const handleTimeChange = () => {
-    let newTime = parseInt(minutes * 60) + parseInt(seconds);
+    const newTime = parseInt(minutes * 60) + parseInt(seconds);
     setRemainingTime(newTime);
     setInitialTime(newTime);
     setIsEditing(false);
