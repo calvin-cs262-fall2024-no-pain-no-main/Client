@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, TouchableWithoutFeedback, Keyboard } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { useRouter } from "expo-router";
 import { globalStyles } from "../assets/styles/globalStyles";
@@ -51,49 +51,54 @@ const Wizard = () => {
 
     return (
         <PageWrapper>
-            <View style={styles.container}>
-                <Text style={styles.title}>Set Your Metrics</Text>
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                <View style={styles.container}>
+                    <Text style={styles.title}>Set Your Metrics</Text>
 
-                {/* Height Input */}
-                <TextInput
-                    style={styles.input}
-                    placeholder="Height (in cm)"
-                    placeholderTextColor="#888"
-                    value={userHeight}
-                    onChangeText={setUserHeight}
-                    keyboardType="numeric"
-                />
+                    {/* Height Input */}
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Height (in cm)"
+                        placeholderTextColor="#888"
+                        value={userHeight}
+                        onChangeText={setUserHeight}
+                        keyboardType="numeric"
+                        returnKeyType="done"
+                    />
 
-                {/* Weight Input */}
-                <TextInput
-                    style={styles.input}
-                    placeholder="Weight (in kg)"
-                    placeholderTextColor="#888"
-                    value={userWeight}
-                    onChangeText={setUserWeight}
-                    keyboardType="numeric"
-                />
+                    {/* Weight Input */}
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Weight (in kg)"
+                        placeholderTextColor="#888"
+                        value={userWeight}
+                        onChangeText={setUserWeight}
+                        keyboardType="numeric"
+                        returnKeyType="done"
+                    />
 
-                {/* Experience Level Picker */}
-                <View style={styles.pickerContainer}>
-                    <Text style={styles.label}>Experience Level:</Text>
-                    <Picker
-                        selectedValue={experienceLevel}
-                        onValueChange={(itemValue) => setExperienceLevel(itemValue)}
-                        style={styles.picker}
-                        dropdownIconColor={theme.colors.textPrimary}
-                    >
-                        <Picker.Item label="Beginner" value="beginner" />
-                        <Picker.Item label="Intermediate" value="intermediate" />
-                        <Picker.Item label="Experienced" value="experienced" />
-                    </Picker>
+                    {/* Experience Level Picker */}
+                    <View style={styles.pickerContainer}>
+                        <Text style={styles.label}>Experience Level:</Text>
+                        <Picker
+                            selectedValue={experienceLevel}
+                            onValueChange={(itemValue) => setExperienceLevel(itemValue)}
+                            style={styles.picker}
+                            dropdownIconColor={theme.colors.textPrimary}
+                            itemStyle={{ color: theme.colors.textPrimary }}
+                        >
+                            <Picker.Item label="Beginner" value="beginner" />
+                            <Picker.Item label="Intermediate" value="intermediate" />
+                            <Picker.Item label="Experienced" value="experienced" />
+                        </Picker>
+                    </View>
+
+                    {/* Save Button */}
+                    <TouchableOpacity style={styles.button} onPress={handleSaveMetrics}>
+                        <Text style={styles.buttonText}>Save and Continue</Text>
+                    </TouchableOpacity>
                 </View>
-
-                {/* Save Button */}
-                <TouchableOpacity style={styles.button} onPress={handleSaveMetrics}>
-                    <Text style={styles.buttonText}>Save and Continue</Text>
-                </TouchableOpacity>
-            </View>
+            </TouchableWithoutFeedback>
         </PageWrapper>
     );
 };
@@ -133,6 +138,7 @@ const styles = StyleSheet.create({
     },
     buttonText: {
         ...globalStyles.buttonText,
+
     },
 });
 
