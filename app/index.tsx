@@ -64,8 +64,8 @@ const Login = () => {
 							performanceData: {
 								sets: [
 									{ set: 1, reps: 8, weight: 0, time: 60 },
-									{ set: 2, reps: 8, weight: 0, time: 70 },
-									{ set: 3, reps: 8, weight: 0, time: 80 },
+									{ set: 2, reps: 8, weight: 0, time: 60 },
+									{ set: 3, reps: 8, weight: 0, time: 60 },
 								],
 							},
 						}));

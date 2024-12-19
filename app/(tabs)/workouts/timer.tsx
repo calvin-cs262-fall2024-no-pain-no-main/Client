@@ -132,7 +132,7 @@ const TimerPage: React.FC = () => {
 
 				{/* Custom Progress Bar */}
 				<View style={styles.progressBarContainer}>
-					<View style={[styles.progressBar, { width: `${(timer / 120) * 100}%` }]} />
+					<View style={[styles.progressBar, { width: `${(timer / 60) * 100}%` }]} />
 				</View>
 
 				{/* Quiz */}

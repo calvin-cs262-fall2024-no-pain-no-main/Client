@@ -69,7 +69,7 @@ const Wizard = () => {
                     {/* Weight Input */}
                     <TextInput
                         style={styles.input}
-                        placeholder="Weight (in kg)"
+                        placeholder="Weight (in lbs)"
                         placeholderTextColor="#888"
                         value={userWeight}
                         onChangeText={setUserWeight}
@@ -138,6 +138,7 @@ const styles = StyleSheet.create({
     },
     buttonText: {
         ...globalStyles.buttonText,
+        color: theme.colors.textPrimary,
 
     },
 });

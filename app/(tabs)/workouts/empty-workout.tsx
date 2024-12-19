@@ -433,6 +433,7 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
 						style={styles.input}
 						keyboardType="numeric"
 						placeholder={String(set.lbs)}
+						placeholderTextColor={theme.colors.textPrimary}
 						onChangeText={(value) => updateSet(exerciseIndex, setIndex, "lbs", Number(value))}
 					/>
 				</View>
@@ -441,6 +442,7 @@ const ExerciseApp: React.FC<ExerciseAppProps> = ({ initialExercises = [] }) => {
 						style={styles.input}
 						keyboardType="numeric"
 						placeholder={String(set.reps)}
+						placeholderTextColor={theme.colors.textPrimary}
 						onChangeText={(value) => updateSet(exerciseIndex, setIndex, "reps", Number(value))}
 					/>
 				</View>
